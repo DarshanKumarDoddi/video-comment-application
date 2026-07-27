@@ -1,11 +1,13 @@
 import { useState } from "react";
 import {
   View,
+  Text,
   TextInput,
   FlatList,
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useTheme } from "../../context/ThemeContext";
 import { fetchVideos } from "../../lib/api";
@@ -70,8 +72,14 @@ export default function SearchScreen() {
           )}
           ListEmptyComponent={
             searched ? (
-              <View style={styles.center}>
-                <ActivityIndicator size="small" color={colors.primary} />
+              <View style={styles.empty}>
+                <Ionicons name="search-outline" size={48} color={colors.secondary} />
+                <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
+                  No results found
+                </Text>
+                <Text style={[styles.emptySub, { color: colors.textSecondary }]}>
+                  Try a different search term
+                </Text>
               </View>
             ) : null
           }
@@ -84,6 +92,9 @@ export default function SearchScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  empty: { flex: 1, justifyContent: "center", alignItems: "center", gap: 8, paddingTop: 60 },
+  emptyTitle: { fontSize: 16, fontWeight: "600" },
+  emptySub: { fontSize: 13 },
   searchBar: { padding: 12 },
   input: {
     paddingHorizontal: 16,

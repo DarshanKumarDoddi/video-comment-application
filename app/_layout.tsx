@@ -1,10 +1,36 @@
-import { Stack } from "expo-router";
+import { useEffect, useRef } from "react";
+import { Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ThemeProvider, useTheme } from "../context/ThemeContext";
+import { AuthProvider } from "../context/AuthContext";
+import {
+  registerForPushNotifications,
+  addNotificationResponseListener,
+} from "../lib/notifications";
 
 function RootLayoutInner() {
   const { colors, isDark } = useTheme();
+  const router = useRouter();
+  const responseListener = useRef<ReturnType<typeof addNotificationResponseListener> | null>(null);
+
+  useEffect(() => {
+    registerForPushNotifications();
+
+    responseListener.current = addNotificationResponseListener((response) => {
+      const data = response.notification.request.content.data;
+      if (data?.videoId) {
+        router.push(`/watch/${data.videoId}`);
+      }
+    });
+
+    return () => {
+      if (responseListener.current) {
+        responseListener.current.remove();
+      }
+    };
+  }, []);
+
   return (
     <>
       <StatusBar style={isDark ? "light" : "dark"} />
@@ -23,7 +49,9 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider>
-        <RootLayoutInner />
+        <AuthProvider>
+          <RootLayoutInner />
+        </AuthProvider>
       </ThemeProvider>
     </GestureHandlerRootView>
   );

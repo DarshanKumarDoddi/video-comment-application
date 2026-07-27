@@ -22,7 +22,7 @@ import TimestampMarker from "../../components/TimestampMarker";
 type SortMode = "latest" | "timestamp";
 
 export default function WatchScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, videoUrl } = useLocalSearchParams<{ id: string; videoUrl?: string }>();
   const { colors } = useTheme();
   const [video, setVideo] = useState<Video | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -57,6 +57,15 @@ export default function WatchScreen() {
     loadVideo();
     loadComments();
   }, [loadVideo, loadComments]);
+
+  useEffect(() => {
+    if (videoUrl && id) {
+      postComment({
+        video_id: id,
+        video_url: videoUrl,
+      }).then(() => loadComments());
+    }
+  }, [videoUrl, id]);
 
   useEffect(() => {
     if (playerReady) {

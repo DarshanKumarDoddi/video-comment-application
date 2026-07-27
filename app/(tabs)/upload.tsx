@@ -11,6 +11,7 @@ import {
 import { useTheme } from "../../context/ThemeContext";
 import { addVideo } from "../../lib/api";
 import { extractVideoId } from "../../lib/youtube";
+import { hapticSuccess, hapticError } from "../../lib/haptics";
 
 export default function UploadScreen() {
   const { colors } = useTheme();
@@ -33,10 +34,12 @@ export default function UploadScreen() {
     setLoading(true);
     try {
       await addVideo(url, title);
+      hapticSuccess();
       Alert.alert("Success", "Video added!");
       setUrl("");
       setTitle("");
     } catch (err: any) {
+      hapticError();
       Alert.alert("Error", err.message || "Failed to add video");
     } finally {
       setLoading(false);

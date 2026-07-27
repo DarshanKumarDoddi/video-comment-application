@@ -1,6 +1,6 @@
 # Project Phases
 
-## Current Phase: Phase 1
+## Current Phase: Phase 6
 
 ---
 
@@ -28,7 +28,7 @@
 - [ ] Theme toggle works (light ↔ dark)
 - [ ] All TypeScript types match backend Python models
 - [ ] API layer is switchable between mock and real
-- [ ] Zero TypeScript errors
+- [x] Zero TypeScript errors
 
 ---
 
@@ -54,7 +54,7 @@
 - [ ] Like count updates in real-time
 - [ ] Timestamp-anchored comments show time badge
 - [ ] Tapping timestamp seeks video to that second
-- [ ] Sort toggle works (latest / timestamp)
+- [x] Sort toggle works (latest / timestamp)
 
 ---
 
@@ -76,7 +76,7 @@
 - [ ] User can record a video clip from in-app camera
 - [ ] Video is compressed and uploaded to Cloudinary
 - [ ] Video comment plays inline in the thread
-- [ ] Works for both top-level and reply comments
+- [x] Works for both top-level and reply comments
 - [ ] Upload failure shows retry option
 
 ---
@@ -99,7 +99,7 @@
 - [ ] User can log in with Google OAuth
 - [ ] Session tokens persist across app restarts
 - [ ] Logged-out users see login prompt on comment actions
-- [ ] Profile shows user info and allows sign out
+- [x] Profile shows user info and allows sign out
 
 ---
 

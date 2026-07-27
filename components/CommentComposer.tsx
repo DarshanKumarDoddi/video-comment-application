@@ -8,7 +8,9 @@ import {
   Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { useTheme } from "../context/ThemeContext";
+import { hapticMedium } from "../lib/haptics";
 
 interface CommentComposerProps {
   currentTime?: number | null;
@@ -28,6 +30,7 @@ export default function CommentComposer({
   onSubmit,
 }: CommentComposerProps) {
   const { colors } = useTheme();
+  const router = useRouter();
   const [text, setText] = useState("");
   const [pinTimestamp, setPinTimestamp] = useState(false);
 
@@ -42,6 +45,7 @@ export default function CommentComposer({
       return;
     }
     onSubmit(text.trim(), null, getTimestamp());
+    hapticMedium();
     setText("");
     setPinTimestamp(false);
   };
@@ -95,37 +99,47 @@ export default function CommentComposer({
       />
 
       <View style={styles.actions}>
-        <TouchableOpacity
-          style={[
-            styles.timestampBtn,
-            pinTimestamp && { backgroundColor: colors.primary + "20" },
-          ]}
-          onPress={() => setPinTimestamp(!pinTimestamp)}
-          disabled={currentTime == null}
-        >
-          <Ionicons
-            name="time-outline"
-            size={14}
-            color={pinTimestamp ? colors.primary : colors.secondary}
-          />
-          <Text
-            style={{
-              color:
-                currentTime == null
-                  ? colors.border
-                  : pinTimestamp
-                  ? colors.primary
-                  : colors.secondary,
-              fontSize: 12,
-            }}
+        <View style={styles.leftActions}>
+          <TouchableOpacity
+            style={[
+              styles.timestampBtn,
+              pinTimestamp && { backgroundColor: colors.primary + "20" },
+            ]}
+            onPress={() => setPinTimestamp(!pinTimestamp)}
+            disabled={currentTime == null}
           >
-            {pinTimestamp && currentTime != null
-              ? `Pinned: ${formatTime(currentTime)}`
-              : currentTime != null
-              ? `Pin: ${formatTime(currentTime)}`
-              : "No player time"}
-          </Text>
-        </TouchableOpacity>
+            <Ionicons
+              name="time-outline"
+              size={14}
+              color={pinTimestamp ? colors.primary : colors.secondary}
+            />
+            <Text
+              style={{
+                color:
+                  currentTime == null
+                    ? colors.border
+                    : pinTimestamp
+                    ? colors.primary
+                    : colors.secondary,
+                fontSize: 12,
+              }}
+            >
+              {pinTimestamp && currentTime != null
+                ? `Pinned: ${formatTime(currentTime)}`
+                : currentTime != null
+                ? `Pin: ${formatTime(currentTime)}`
+                : "No player time"}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.recordBtn}
+            onPress={() => router.push("/video-record")}
+          >
+            <Ionicons name="videocam" size={14} color={colors.accent} />
+            <Text style={{ color: colors.accent, fontSize: 12 }}>Record</Text>
+          </TouchableOpacity>
+        </View>
 
         <TouchableOpacity
           style={[styles.submitBtn, { backgroundColor: colors.primary }]}
@@ -159,7 +173,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 8,
   },
+  leftActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
   timestampBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  recordBtn: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,

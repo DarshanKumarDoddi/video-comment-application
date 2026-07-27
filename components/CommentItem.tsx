@@ -8,10 +8,13 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
+import { Video, ResizeMode } from "expo-av";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { useTheme } from "../context/ThemeContext";
 import { CommentWithReplies } from "../types";
 import { getTimeAgo, formatTimestamp } from "../lib/utils";
+import { hapticLight, hapticMedium } from "../lib/haptics";
 
 interface CommentItemProps {
   comment: CommentWithReplies;
@@ -29,6 +32,7 @@ export default function CommentItem({
   onReply,
 }: CommentItemProps) {
   const { colors } = useTheme();
+  const router = useRouter();
   const [showReply, setShowReply] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [replying, setReplying] = useState(false);
@@ -39,6 +43,7 @@ export default function CommentItem({
 
   const handleLike = () => {
     if (liked) return;
+    hapticLight();
     setLiked(true);
     setLikeCount((c) => c + 1);
     onLike(comment.id);
@@ -52,6 +57,7 @@ export default function CommentItem({
     setReplying(true);
     try {
       await onReply(comment.id, replyText.trim());
+      hapticMedium();
       setReplyText("");
       setShowReply(false);
     } catch (err: any) {
@@ -96,12 +102,14 @@ export default function CommentItem({
       </View>
 
       {comment.video_url && (
-        <View style={styles.videoContainer}>
-          <Ionicons name="play-circle" size={40} color="#fff" />
-          <Text style={[styles.videoPlaceholder, { color: colors.textSecondary }]}>
-            Video comment
-          </Text>
-        </View>
+        <Video
+          source={{ uri: comment.video_url }}
+          style={styles.videoContainer}
+          resizeMode={ResizeMode.CONTAIN}
+          useNativeControls
+          shouldPlay={false}
+          isMuted
+        />
       )}
 
       {comment.text_content && (
@@ -160,6 +168,12 @@ export default function CommentItem({
             multiline
           />
           <View style={styles.replyActions}>
+            <TouchableOpacity
+              style={styles.replyRecord}
+              onPress={() => router.push("/video-record")}
+            >
+              <Ionicons name="videocam" size={14} color={colors.accent} />
+            </TouchableOpacity>
             <TouchableOpacity
               style={[styles.replyBtn, { backgroundColor: colors.primary }]}
               onPress={handleReply}
@@ -262,6 +276,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 8,
     marginTop: 8,
+    alignItems: "center",
+  },
+  replyRecord: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
   },
   replyBtn: {
     paddingHorizontal: 16,

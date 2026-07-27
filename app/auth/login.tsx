@@ -11,20 +11,71 @@ import {
   Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import * as WebBrowser from "expo-web-browser";
+import * as AuthSession from "expo-auth-session";
 import { useTheme } from "../../context/ThemeContext";
 import { signIn, signUp, setDisplayName } from "../../lib/auth";
+import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../context/AuthContext";
 import DisplayNamePrompt from "../../components/DisplayNamePrompt";
+
+WebBrowser.maybeCompleteAuthSession();
+
+const GOOGLE_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ?? "";
 
 export default function LoginScreen() {
   const { colors } = useTheme();
   const router = useRouter();
+  const { setUser } = useAuth();
   const [isSignup, setIsSignup] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
   const [showNamePrompt, setShowNamePrompt] = useState(false);
-  const [pendingUsername, setPendingUsername] = useState("");
+
+  const [request, response, promptAsync] = AuthSession.useAuthRequest(
+    {
+      clientId: GOOGLE_CLIENT_ID,
+      redirectUri: AuthSession.makeRedirectUri({
+        scheme: "vidtalk",
+        path: "auth/callback",
+      }),
+      scopes: ["openid", "profile", "email"],
+      usePKCE: true,
+    },
+    {
+      authorizationEndpoint: "https://accounts.google.com/o/oauth2/v2/auth",
+      tokenEndpoint: "https://oauth2.googleapis.com/token",
+    }
+  );
+
+  const handleGoogleSignIn = async () => {
+    try {
+      const result = await promptAsync();
+      if (result.type === "success" && result.params.code) {
+        setLoading(true);
+        const { data, error } = await supabase.auth.exchangeCodeForSession(
+          result.params.code
+        );
+        if (error) throw error;
+        if (data.user) {
+          const user = {
+            id: data.user.id,
+            email: data.user.email ?? "",
+            username: data.user.user_metadata?.full_name,
+          };
+          setUser(user);
+          router.back();
+        }
+      }
+    } catch (err: any) {
+      Alert.alert("Error", err.message || "Google sign-in failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!email.trim() || !password.trim()) {
@@ -39,11 +90,12 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       if (isSignup) {
-        await signUp(email, password, username);
-        setPendingUsername(username);
+        const user = await signUp(email, password, username);
+        setUser(user);
         setShowNamePrompt(true);
       } else {
-        await signIn(email, password);
+        const result = await signIn(email, password);
+        setUser(result.user);
         router.back();
       }
     } catch (err: any) {
@@ -68,6 +120,25 @@ export default function LoginScreen() {
         <Text style={[styles.title, { color: colors.textPrimary }]}>
           {isSignup ? "Sign Up" : "Login"}
         </Text>
+
+        {GOOGLE_CLIENT_ID ? (
+          <>
+            <TouchableOpacity
+              style={[styles.googleBtn, { borderColor: colors.border }]}
+              onPress={handleGoogleSignIn}
+              disabled={loading}
+            >
+              <Ionicons name="logo-google" size={18} color="#fff" />
+              <Text style={styles.googleBtnText}>Continue with Google</Text>
+            </TouchableOpacity>
+
+            <View style={styles.divider}>
+              <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+              <Text style={[styles.dividerText, { color: colors.secondary }]}>or</Text>
+              <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+            </View>
+          </>
+        ) : null}
 
         {isSignup && (
           <TextInput
@@ -162,8 +233,27 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: "700",
     textAlign: "center",
-    marginBottom: 16,
+    marginBottom: 8,
   },
+  googleBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 8,
+    borderWidth: 1,
+    backgroundColor: "#4285F4",
+  },
+  googleBtnText: { color: "#fff", fontSize: 16, fontWeight: "500" },
+  divider: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginVertical: 4,
+  },
+  dividerLine: { flex: 1, height: 1 },
+  dividerText: { fontSize: 12 },
   input: {
     paddingHorizontal: 16,
     paddingVertical: 14,
