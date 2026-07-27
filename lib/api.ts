@@ -25,7 +25,7 @@ const MOCK_VIDEOS: Video[] = [
   },
 ];
 
-const MOCK_COMMENTS: Comment[] = [
+let mockComments: Comment[] = [
   {
     id: "mc-1",
     video_id: "mock-1",
@@ -141,7 +141,7 @@ export async function fetchVideo(id: string): Promise<Video> {
 
 export async function fetchComments(videoId: string): Promise<Comment[]> {
   if (USE_MOCK_DATA) {
-    return MOCK_COMMENTS.filter((c) => c.video_id === videoId);
+    return mockComments.filter((c) => c.video_id === videoId);
   }
   return apiGet<Comment[]>(`/api/videos/${videoId}/comments`);
 }
@@ -150,7 +150,7 @@ export async function postComment(
   comment: CommentCreate
 ): Promise<Comment> {
   if (USE_MOCK_DATA) {
-    return {
+    const newComment: Comment = {
       id: `mock-${Date.now()}`,
       video_id: comment.video_id,
       author_id: "mock-user",
@@ -162,6 +162,8 @@ export async function postComment(
       created_at: new Date().toISOString(),
       likes_count: 0,
     };
+    mockComments = [...mockComments, newComment];
+    return newComment;
   }
   return apiPost<Comment>("/api/comments", comment);
 }
@@ -170,7 +172,12 @@ export async function likeComment(
   commentId: string
 ): Promise<LikeResponse> {
   if (USE_MOCK_DATA) {
-    return { likes_count: Math.floor(Math.random() * 10) + 1 };
+    const comment = mockComments.find((c) => c.id === commentId);
+    if (comment) {
+      comment.likes_count = (comment.likes_count || 0) + 1;
+      return { likes_count: comment.likes_count };
+    }
+    return { likes_count: 1 };
   }
   return apiPost<LikeResponse>(`/api/comments/${commentId}/like`, {});
 }

@@ -12,7 +12,8 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useTheme } from "../../context/ThemeContext";
-import { signIn, signUp } from "../../lib/auth";
+import { signIn, signUp, setDisplayName } from "../../lib/auth";
+import DisplayNamePrompt from "../../components/DisplayNamePrompt";
 
 export default function LoginScreen() {
   const { colors } = useTheme();
@@ -22,6 +23,8 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showNamePrompt, setShowNamePrompt] = useState(false);
+  const [pendingUsername, setPendingUsername] = useState("");
 
   const handleSubmit = async () => {
     if (!email.trim() || !password.trim()) {
@@ -37,8 +40,8 @@ export default function LoginScreen() {
     try {
       if (isSignup) {
         await signUp(email, password, username);
-        Alert.alert("Success", "Account created! Please login.");
-        setIsSignup(false);
+        setPendingUsername(username);
+        setShowNamePrompt(true);
       } else {
         await signIn(email, password);
         router.back();
@@ -48,6 +51,12 @@ export default function LoginScreen() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleNameSaved = async (name: string) => {
+    await setDisplayName(name);
+    setShowNamePrompt(false);
+    router.back();
   };
 
   return (
@@ -133,6 +142,15 @@ export default function LoginScreen() {
           </Text>
         </TouchableOpacity>
       </View>
+
+      <DisplayNamePrompt
+        visible={showNamePrompt}
+        onSubmit={handleNameSaved}
+        onSkip={() => {
+          setShowNamePrompt(false);
+          router.back();
+        }}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -140,7 +158,12 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: "center" },
   form: { padding: 24, gap: 12 },
-  title: { fontSize: 28, fontWeight: "700", textAlign: "center", marginBottom: 16 },
+  title: {
+    fontSize: 28,
+    fontWeight: "700",
+    textAlign: "center",
+    marginBottom: 16,
+  },
   input: {
     paddingHorizontal: 16,
     paddingVertical: 14,
