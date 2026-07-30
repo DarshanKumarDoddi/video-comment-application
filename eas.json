@@ -8,7 +8,18 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
-      }
+      },
+      "env": {
+        "NPM_FLAGS": "--legacy-peer-deps",
+        "EXPO_PUBLIC_API_BASE_URL": "https://vidtalk.6281401.xyz",
+        "EXPO_PUBLIC_USE_MOCK_DATA": "true",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://izustvmcqvvcpoexyotr.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6dXN0dm1jcXZ2Y3BvZXh5b3RyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ3MTg4NjUsImV4cCI6MjEwMDI5NDg2NX0.q45GgHXltbXNf158fHOrHT4culZg8-VNAJBVWBD5NKw",
+        "EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME": "qcx26olk",
+        "EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET": "mobile_app_upload",
+        "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "your_google_client_id"
+      },
+      "installCommand": "npm install --legacy-peer-deps"
     },
     "preview": {
       "distribution": "internal",

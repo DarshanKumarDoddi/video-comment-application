@@ -20,7 +20,11 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "package": "com.vidtalk.app",
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -40,6 +44,13 @@
           "iosAccessGroup": "com.vidtalk.app"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "d56ff209-3b11-420b-a98c-fe57b20a2660"
+      }
+    },
+    "owner": "darshankumar27"
   }
 }
