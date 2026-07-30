@@ -18,8 +18,7 @@
         "EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME": "qcx26olk",
         "EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET": "mobile_app_upload",
         "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "your_google_client_id"
-      },
-      "installCommand": "npm install --legacy-peer-deps"
+      }
     },
     "preview": {
       "distribution": "internal",
