@@ -43,8 +43,14 @@
         {
           "iosAccessGroup": "com.vidtalk.app"
         }
-      ]
+      ],
+      "expo-splash-screen"
     ],
+    "splash": {
+      "image": "./assets/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#E6F4FE"
+    },
     "extra": {
       "router": {},
       "eas": {
