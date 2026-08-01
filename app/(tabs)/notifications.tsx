@@ -11,6 +11,11 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../context/AuthContext";
+import {
+  getNotificationPermissionStatus,
+  requestNotificationPermission,
+  openNotificationSettings,
+} from "../../lib/notifications";
 
 interface Notification {
   id: string;
@@ -27,6 +32,12 @@ export default function NotificationsScreen() {
   const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [permStatus, setPermStatus] = useState<string | null>(null);
+
+  const checkPermission = useCallback(async () => {
+    const status = await getNotificationPermissionStatus();
+    setPermStatus(status);
+  }, []);
 
   const loadNotifications = useCallback(async () => {
     setLoading(true);
@@ -42,7 +53,17 @@ export default function NotificationsScreen() {
 
   useEffect(() => {
     loadNotifications();
-  }, [loadNotifications]);
+    if (user) checkPermission();
+  }, [loadNotifications, checkPermission, user]);
+
+  const handleEnableNotifications = async () => {
+    if (permStatus === "undetermined") {
+      const status = await requestNotificationPermission();
+      setPermStatus(status);
+    } else {
+      await openNotificationSettings();
+    }
+  };
 
   if (!user) {
     return (
@@ -64,62 +85,81 @@ export default function NotificationsScreen() {
     );
   }
 
-  if (loading) {
-    return (
-      <View style={[styles.center, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
-  }
-
-  if (notifications.length === 0) {
-    return (
-      <View style={[styles.center, { backgroundColor: colors.background }]}>
-        <Ionicons name="notifications-off-outline" size={64} color={colors.secondary} />
-        <Text style={[styles.title, { color: colors.textPrimary }]}>
-          No notifications
-        </Text>
-        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-          You'll see replies and likes here
-        </Text>
-      </View>
-    );
-  }
+  const showPermBanner =
+    permStatus === "denied" || permStatus === "undetermined";
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <FlatList
-        data={notifications}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
+      {showPermBanner && (
+        <View style={[styles.permBanner, { borderBottomColor: colors.border }]}>
+          <Ionicons
+            name="notifications-off-outline"
+            size={18}
+            color={colors.textSecondary}
+          />
+          <Text style={[styles.permText, { color: colors.textSecondary }]}>
+            Notifications are off. Enable them to get notified about replies and
+            likes.
+          </Text>
           <TouchableOpacity
-            style={[
-              styles.item,
-              { borderBottomColor: colors.border },
-              !item.read && { backgroundColor: colors.primary + "10" },
-            ]}
-            onPress={() => {
-              if (item.videoId) router.push(`/watch/${item.videoId}`);
-            }}
+            style={[styles.permBtn, { backgroundColor: colors.primary }]}
+            onPress={handleEnableNotifications}
           >
-            <View style={styles.iconContainer}>
-              <Ionicons
-                name="chatbubble"
-                size={20}
-                color={colors.primary}
-              />
-            </View>
-            <View style={styles.itemContent}>
-              <Text style={[styles.itemTitle, { color: colors.textPrimary }]}>
-                {item.title}
-              </Text>
-              <Text style={[styles.itemBody, { color: colors.textSecondary }]}>
-                {item.body}
-              </Text>
-            </View>
+            <Text style={styles.permBtnText}>
+              {permStatus === "undetermined" ? "Enable" : "Settings"}
+            </Text>
           </TouchableOpacity>
-        )}
-      />
+        </View>
+      )}
+
+      {loading ? (
+        <View style={[styles.center, { backgroundColor: colors.background }]}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      ) : notifications.length === 0 ? (
+        <View style={[styles.center, { backgroundColor: colors.background }]}>
+          <Ionicons
+            name="notifications-off-outline"
+            size={64}
+            color={colors.secondary}
+          />
+          <Text style={[styles.title, { color: colors.textPrimary }]}>
+            No notifications
+          </Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+            You'll see replies and likes here
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={notifications}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={[
+                styles.item,
+                { borderBottomColor: colors.border },
+                !item.read && { backgroundColor: colors.primary + "10" },
+              ]}
+              onPress={() => {
+                if (item.videoId) router.push(`/watch/${item.videoId}`);
+              }}
+            >
+              <View style={styles.iconContainer}>
+                <Ionicons name="chatbubble" size={20} color={colors.primary} />
+              </View>
+              <View style={styles.itemContent}>
+                <Text style={[styles.itemTitle, { color: colors.textPrimary }]}>
+                  {item.title}
+                </Text>
+                <Text style={[styles.itemBody, { color: colors.textSecondary }]}>
+                  {item.body}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          )}
+        />
+      )}
     </View>
   );
 }
@@ -136,6 +176,21 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   loginBtnText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  permBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  permText: { flex: 1, fontSize: 12 },
+  permBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  permBtnText: { color: "#fff", fontSize: 12, fontWeight: "600" },
   item: {
     flexDirection: "row",
     padding: 16,

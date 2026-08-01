@@ -14,7 +14,11 @@ import { useTheme } from "../../context/ThemeContext";
 import { uploadToCloudinary } from "../../lib/cloudinary";
 
 export default function VideoPreviewScreen() {
-  const { uri } = useLocalSearchParams<{ uri: string }>();
+  const { uri, videoId, parentId } = useLocalSearchParams<{
+    uri: string;
+    videoId?: string;
+    parentId?: string;
+  }>();
   const { colors } = useTheme();
   const router = useRouter();
   const videoRef = useRef<Video>(null);
@@ -23,6 +27,10 @@ export default function VideoPreviewScreen() {
 
   const handlePost = async () => {
     if (!uri) return;
+    if (!videoId) {
+      Alert.alert("Error", "Could not determine the video for this comment");
+      return;
+    }
     setUploading(true);
     setUploadProgress("Compressing...");
     try {
@@ -33,8 +41,9 @@ export default function VideoPreviewScreen() {
       router.push({
         pathname: "/watch/[id]",
         params: {
-          id: "mock-1",
+          id: videoId,
           videoUrl: result.url,
+          parentId: parentId || "",
         },
       });
     } catch (err: any) {

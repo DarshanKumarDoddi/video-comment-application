@@ -1,6 +1,6 @@
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
-import { Platform } from "react-native";
+import { Linking } from "react-native";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -11,6 +11,22 @@ Notifications.setNotificationHandler({
     shouldShowList: true,
   }),
 });
+
+export async function getNotificationPermissionStatus(): Promise<
+  Notifications.PermissionStatus
+> {
+  return (await Notifications.getPermissionsAsync()).status;
+}
+
+export async function requestNotificationPermission(): Promise<
+  Notifications.PermissionStatus
+> {
+  return (await Notifications.requestPermissionsAsync()).status;
+}
+
+export async function openNotificationSettings(): Promise<void> {
+  await Linking.openSettings();
+}
 
 export async function registerForPushNotifications(): Promise<string | null> {
   if (!Device.isDevice) return null;

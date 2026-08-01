@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../context/ThemeContext";
 
@@ -17,6 +17,10 @@ const MAX_DURATION = 60;
 export default function VideoRecordScreen() {
   const { colors } = useTheme();
   const router = useRouter();
+  const { videoId, parentId } = useLocalSearchParams<{
+    videoId?: string;
+    parentId?: string;
+  }>();
   const [permission, requestPermission] = useCameraPermissions();
   const [facing, setFacing] = useState<"front" | "back">("back");
   const [recording, setRecording] = useState(false);
@@ -63,7 +67,11 @@ export default function VideoRecordScreen() {
       if (video?.uri) {
         router.push({
           pathname: "/video-record/preview",
-          params: { uri: video.uri },
+          params: {
+            uri: video.uri,
+            videoId: videoId ?? "",
+            parentId: parentId ?? "",
+          },
         });
       }
     } catch (err: any) {

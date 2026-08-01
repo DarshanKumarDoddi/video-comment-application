@@ -21,14 +21,18 @@ import TimestampMarker from "../../components/TimestampMarker";
 
 type SortMode = "latest" | "timestamp";
 
+const PAGE_SIZE = 5;
+
 export default function WatchScreen() {
-  const { id, videoUrl } = useLocalSearchParams<{ id: string; videoUrl?: string }>();
+  const { id, videoUrl, parentId } = useLocalSearchParams<{ id: string; videoUrl?: string; parentId?: string }>();
   const { colors } = useTheme();
   const [video, setVideo] = useState<Video | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortMode, setSortMode] = useState<SortMode>("latest");
   const [playerReady, setPlayerReady] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [loadingMore, setLoadingMore] = useState(false);
   const { playerRef, seekTo, getCurrentTime } = useYouTubePlayer();
   const timeTrackerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [liveCurrentTime, setLiveCurrentTime] = useState<number | null>(null);
@@ -63,9 +67,13 @@ export default function WatchScreen() {
       postComment({
         video_id: id,
         video_url: videoUrl,
-      }).then(() => loadComments());
+        parent_comment_id: parentId || null,
+      }).then(() => {
+        setVisibleCount(PAGE_SIZE);
+        loadComments();
+      });
     }
-  }, [videoUrl, id]);
+  }, [videoUrl, id, parentId]);
 
   useEffect(() => {
     if (playerReady) {
@@ -91,6 +99,7 @@ export default function WatchScreen() {
       video_url: videoUrl,
       timestamp_seconds: timestampSeconds,
     });
+    setVisibleCount(PAGE_SIZE);
     loadComments();
   };
 
@@ -101,11 +110,21 @@ export default function WatchScreen() {
       text_content: text,
       parent_comment_id: parentId,
     });
+    setVisibleCount(PAGE_SIZE);
     loadComments();
   };
 
   const handleLike = async (commentId: string) => {
     await likeComment(commentId);
+  };
+
+  const handleEndReached = () => {
+    if (loadingMore || visibleCount >= tree.length) return;
+    setLoadingMore(true);
+    setTimeout(() => {
+      setVisibleCount((c) => Math.min(c + PAGE_SIZE, tree.length));
+      setLoadingMore(false);
+    }, 400);
   };
 
   const getSortedComments = (): Comment[] => {
@@ -136,6 +155,8 @@ export default function WatchScreen() {
 
   const sorted = getSortedComments();
   const tree = buildCommentTree(sorted);
+  const visibleTree = tree.slice(0, visibleCount);
+  const hasMoreComments = visibleCount < tree.length;
   const markers = getTimestampMarkers();
 
   return (
@@ -143,6 +164,21 @@ export default function WatchScreen() {
       <FlatList
         data={[]}
         renderItem={null}
+        onEndReached={handleEndReached}
+        onEndReachedThreshold={0.4}
+        ListFooterComponent={
+          loadingMore ? (
+            <View style={styles.footer}>
+              <ActivityIndicator size="small" color={colors.primary} />
+            </View>
+          ) : hasMoreComments ? (
+            <TouchableOpacity style={styles.footer} onPress={handleEndReached}>
+              <Text style={[styles.footerText, { color: colors.textSecondary }]}>
+                Load more comments
+              </Text>
+            </TouchableOpacity>
+          ) : null
+        }
         ListHeaderComponent={
           <>
             <VideoPlayer
@@ -218,11 +254,13 @@ export default function WatchScreen() {
 
             <CommentComposer
               currentTime={liveCurrentTime}
+              videoId={id}
               onSubmit={handlePostComment}
             />
 
             <CommentThread
-              comments={tree}
+              comments={visibleTree}
+              videoId={id}
               onLike={handleLike}
               onSeek={seekTo}
               onReply={handleReply}
@@ -271,4 +309,6 @@ const styles = StyleSheet.create({
   commentCount: { marginLeft: "auto", fontSize: 12 },
   empty: { padding: 40, alignItems: "center" },
   emptyText: { fontSize: 14 },
+  footer: { padding: 16, alignItems: "center" },
+  footerText: { fontSize: 13, fontWeight: "500" },
 });

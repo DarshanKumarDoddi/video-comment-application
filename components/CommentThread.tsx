@@ -5,6 +5,7 @@ import CommentItem from "./CommentItem";
 
 interface CommentThreadProps {
   comments: CommentWithReplies[];
+  videoId: string;
   onLike: (commentId: string) => void;
   onSeek?: (seconds: number) => void;
   onReply: (parentId: string, text: string) => Promise<void>;
@@ -12,6 +13,7 @@ interface CommentThreadProps {
 
 export default function CommentThread({
   comments,
+  videoId,
   onLike,
   onSeek,
   onReply,
@@ -22,6 +24,7 @@ export default function CommentThread({
         <CommentItem
           key={comment.id}
           comment={comment}
+          videoId={videoId}
           onLike={onLike}
           onSeek={onSeek}
           onReply={onReply}

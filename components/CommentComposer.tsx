@@ -14,6 +14,7 @@ import { hapticMedium } from "../lib/haptics";
 
 interface CommentComposerProps {
   currentTime?: number | null;
+  videoId: string;
   placeholder?: string;
   compact?: boolean;
   onSubmit: (
@@ -25,6 +26,7 @@ interface CommentComposerProps {
 
 export default function CommentComposer({
   currentTime,
+  videoId,
   placeholder = "Add a comment...",
   compact = false,
   onSubmit,
@@ -134,7 +136,9 @@ export default function CommentComposer({
 
           <TouchableOpacity
             style={styles.recordBtn}
-            onPress={() => router.push("/video-record")}
+            onPress={() =>
+              router.push({ pathname: "/video-record", params: { videoId } })
+            }
           >
             <Ionicons name="videocam" size={14} color={colors.accent} />
             <Text style={{ color: colors.accent, fontSize: 12 }}>Record</Text>

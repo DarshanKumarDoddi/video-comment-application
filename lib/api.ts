@@ -122,12 +122,8 @@ async function apiUpload<T>(path: string, formData: FormData): Promise<T> {
 }
 
 export async function fetchVideos(): Promise<Video[]> {
-  try {
-    const videos = await apiGet<Video[]>("/api/videos");
-    return [...MOCK_VIDEOS, ...videos];
-  } catch {
-    return MOCK_VIDEOS;
-  }
+  if (USE_MOCK_DATA) return MOCK_VIDEOS;
+  return apiGet<Video[]>("/api/videos");
 }
 
 export async function fetchVideo(id: string): Promise<Video> {
@@ -179,7 +175,7 @@ export async function likeComment(
     }
     return { likes_count: 1 };
   }
-  return apiPost<LikeResponse>(`/api/comments/${commentId}/like`, {});
+  return apiPost<LikeResponse>(`/api/videos/${commentId}/like`, {});
 }
 
 export async function addVideo(

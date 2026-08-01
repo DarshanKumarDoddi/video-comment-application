@@ -19,6 +19,7 @@ import { hapticLight, hapticMedium } from "../lib/haptics";
 interface CommentItemProps {
   comment: CommentWithReplies;
   depth?: number;
+  videoId: string;
   onLike: (commentId: string) => void;
   onSeek?: (seconds: number) => void;
   onReply: (parentId: string, text: string) => Promise<void>;
@@ -27,6 +28,7 @@ interface CommentItemProps {
 export default function CommentItem({
   comment,
   depth = 0,
+  videoId,
   onLike,
   onSeek,
   onReply,
@@ -170,7 +172,12 @@ export default function CommentItem({
           <View style={styles.replyActions}>
             <TouchableOpacity
               style={styles.replyRecord}
-              onPress={() => router.push("/video-record")}
+              onPress={() =>
+                router.push({
+                  pathname: "/video-record",
+                  params: { videoId, parentId: comment.id },
+                })
+              }
             >
               <Ionicons name="videocam" size={14} color={colors.accent} />
             </TouchableOpacity>
@@ -205,6 +212,7 @@ export default function CommentItem({
           key={reply.id}
           comment={reply}
           depth={depth + 1}
+          videoId={videoId}
           onLike={onLike}
           onSeek={onSeek}
           onReply={onReply}
