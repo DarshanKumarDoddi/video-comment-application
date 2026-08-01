@@ -62,3 +62,37 @@
 | Refactor existing code | Changing .env / config values |
 | Add error handling | Modifying Supabase/Cloudinary setup |
 | Fix bugs and typos | Changing API endpoint contracts |
+
+
+## 6. Coding Principles
+
+All code written for this project — by developers or AI assistants — must follow these principles:
+
+### 6.1 End-User Experience
+- Prioritize responsiveness, clarity, and smooth interactions over clever implementation.
+- Handle edge cases (empty states, slow networks, errors) gracefully — never leave the user stuck or confused.
+
+### 6.2 Naming Conventions
+- Use clear, descriptive, and meaningful variable, function, and file names.
+- Avoid abbreviations or single-letter names except in tightly scoped loops (e.g. `i`, `j`).
+- Names should convey intent — e.g. `isVideoLoading` instead of `flag1`.
+
+### 6.3 No Duplicate Code (DRY)
+- Reuse existing functions, components, and utilities wherever possible.
+- If logic repeats more than twice, extract it into a shared function/module.
+- Before writing new code, check whether similar logic already exists in the codebase.
+
+### 6.4 Code Optimization
+- Avoid unnecessary re-renders, redundant API calls, and inefficient loops.
+- Prefer efficient data structures and algorithms appropriate to the scale of the data.
+- Optimize only after correctness is established — don't sacrifice readability for premature optimization.
+
+### 6.5 Coding Style
+- Follow consistent formatting, indentation, and file structure across the codebase.
+- Match the existing style/conventions already used in this project (see architecture.md for structure).
+- Use linters/formatters where configured; do not bypass them.
+
+### 6.6 Correctness
+- Code must function as intended and be verified (manually or via tests) before being considered complete.
+- Handle errors explicitly — no silent failures.
+- When uncertain about expected behavior, flag it rather than guessing.
