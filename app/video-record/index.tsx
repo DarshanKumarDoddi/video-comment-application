@@ -11,6 +11,7 @@ import { CameraView, useCameraPermissions } from "expo-camera";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../context/ThemeContext";
+import { formatTimestamp } from "../../lib/utils";
 
 const MAX_DURATION = 60;
 
@@ -117,11 +118,7 @@ export default function VideoRecordScreen() {
     );
   }
 
-  const formatTime = (s: number) => {
-    const m = Math.floor(s / 60);
-    const sec = s % 60;
-    return `${m}:${sec.toString().padStart(2, "0")}`;
-  };
+  const formatTime = formatTimestamp;
 
   return (
     <View style={styles.container}>

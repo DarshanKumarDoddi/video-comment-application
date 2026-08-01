@@ -11,6 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useTheme } from "../context/ThemeContext";
 import { hapticMedium } from "../lib/haptics";
+import { formatTimestamp } from "../lib/utils";
 
 interface CommentComposerProps {
   currentTime?: number | null;
@@ -50,12 +51,6 @@ export default function CommentComposer({
     hapticMedium();
     setText("");
     setPinTimestamp(false);
-  };
-
-  const formatTime = (seconds: number): string => {
-    const m = Math.floor(seconds / 60);
-    const s = Math.floor(seconds % 60);
-    return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
   if (compact) {
@@ -127,9 +122,9 @@ export default function CommentComposer({
               }}
             >
               {pinTimestamp && currentTime != null
-                ? `Pinned: ${formatTime(currentTime)}`
+                ? `Pinned: ${formatTimestamp(currentTime)}`
                 : currentTime != null
-                ? `Pin: ${formatTime(currentTime)}`
+                ? `Pin: ${formatTimestamp(currentTime)}`
                 : "No player time"}
             </Text>
           </TouchableOpacity>

@@ -6,6 +6,7 @@ import {
   FlatList,
   StyleSheet,
   ActivityIndicator,
+  TouchableOpacity,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -21,18 +22,21 @@ export default function SearchScreen() {
   const [results, setResults] = useState<Video[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const searchVideos = async () => {
     if (!query.trim()) return;
     setLoading(true);
     setSearched(true);
+    setError(null);
     try {
       const all = await fetchVideos();
       const filtered = all.filter((v) =>
         v.title.toLowerCase().includes(query.toLowerCase())
       );
       setResults(filtered);
-    } catch {
+    } catch (err: any) {
+      setError(err.message || "Search failed");
       setResults([]);
     } finally {
       setLoading(false);
@@ -71,7 +75,23 @@ export default function SearchScreen() {
             />
           )}
           ListEmptyComponent={
-            searched ? (
+            error ? (
+              <View style={styles.empty}>
+                <Ionicons name="cloud-offline-outline" size={48} color={colors.secondary} />
+                <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
+                  Search failed
+                </Text>
+                <Text style={[styles.emptySub, { color: colors.textSecondary }]}>
+                  {error}
+                </Text>
+                <TouchableOpacity
+                  style={[styles.retryBtn, { backgroundColor: colors.primary }]}
+                  onPress={searchVideos}
+                >
+                  <Text style={styles.retryBtnText}>Retry</Text>
+                </TouchableOpacity>
+              </View>
+            ) : searched ? (
               <View style={styles.empty}>
                 <Ionicons name="search-outline" size={48} color={colors.secondary} />
                 <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
@@ -104,4 +124,11 @@ const styles = StyleSheet.create({
   },
   row: { paddingHorizontal: 12, gap: 12 },
   list: { paddingVertical: 12, gap: 12 },
+  retryBtn: {
+    marginTop: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  retryBtnText: { color: "#fff", fontSize: 15, fontWeight: "600" },
 });
