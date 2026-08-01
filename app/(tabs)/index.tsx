@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../context/ThemeContext";
 import { fetchVideos } from "../../lib/api";
 import { Video } from "../../types";
@@ -22,6 +23,7 @@ export default function HomeScreen() {
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [loadingMore, setLoadingMore] = useState(false);
 
@@ -29,7 +31,9 @@ export default function HomeScreen() {
     try {
       const data = await fetchVideos();
       setVideos(data);
-    } catch {
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || "Could not load videos");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -61,6 +65,30 @@ export default function HomeScreen() {
         style={[styles.center, { backgroundColor: colors.background }]}
       >
         <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (error && videos.length === 0) {
+    return (
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <Ionicons name="cloud-offline-outline" size={64} color={colors.secondary} />
+        <Text style={[styles.errorTitle, { color: colors.textPrimary }]}>
+          Could not load videos
+        </Text>
+        <Text style={[styles.errorText, { color: colors.textSecondary }]}>
+          {error}
+        </Text>
+        <TouchableOpacity
+          style={[styles.retryBtn, { backgroundColor: colors.primary }]}
+          onPress={() => {
+            setLoading(true);
+            setError(null);
+            loadVideos();
+          }}
+        >
+          <Text style={styles.retryBtnText}>Retry</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -120,4 +148,13 @@ const styles = StyleSheet.create({
   footer: { padding: 16, alignItems: "center" },
   footerText: { fontSize: 13, fontWeight: "500" },
   emptyText: { fontSize: 15, padding: 40, textAlign: "center" },
+  errorTitle: { fontSize: 18, fontWeight: "600" },
+  errorText: { fontSize: 14, textAlign: "center", paddingHorizontal: 40 },
+  retryBtn: {
+    marginTop: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  retryBtnText: { color: "#fff", fontSize: 15, fontWeight: "600" },
 });

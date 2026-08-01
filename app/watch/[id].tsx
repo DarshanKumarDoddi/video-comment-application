@@ -9,6 +9,7 @@ import {
   ScrollView,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../context/ThemeContext";
 import { fetchVideo, fetchComments, postComment, likeComment } from "../../lib/api";
 import { Video, Comment, CommentWithReplies } from "../../types";
@@ -33,6 +34,8 @@ export default function WatchScreen() {
   const [playerReady, setPlayerReady] = useState(false);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [commentsError, setCommentsError] = useState<string | null>(null);
   const { playerRef, seekTo, getCurrentTime } = useYouTubePlayer();
   const timeTrackerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [liveCurrentTime, setLiveCurrentTime] = useState<number | null>(null);
@@ -42,7 +45,9 @@ export default function WatchScreen() {
     try {
       const data = await fetchVideo(id);
       setVideo(data);
-    } catch {
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || "Could not load video");
     } finally {
       setLoading(false);
     }
@@ -53,7 +58,9 @@ export default function WatchScreen() {
     try {
       const data = await fetchComments(id);
       setComments(data);
-    } catch {
+      setCommentsError(null);
+    } catch (err: any) {
+      setCommentsError(err.message || "Could not load comments");
     }
   }, [id]);
 
@@ -149,6 +156,30 @@ export default function WatchScreen() {
     return (
       <View style={[styles.center, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <Ionicons name="cloud-offline-outline" size={64} color={colors.secondary} />
+        <Text style={[styles.errorTitle, { color: colors.textPrimary }]}>
+          Could not load video
+        </Text>
+        <Text style={[styles.errorText, { color: colors.textSecondary }]}>
+          {error}
+        </Text>
+        <TouchableOpacity
+          style={[styles.retryBtn, { backgroundColor: colors.primary }]}
+          onPress={() => {
+            setLoading(true);
+            setError(null);
+            loadVideo();
+          }}
+        >
+          <Text style={styles.retryBtnText}>Retry</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -266,12 +297,29 @@ export default function WatchScreen() {
               onReply={handleReply}
             />
 
-            {tree.length === 0 && (
+            {commentsError ? (
               <View style={styles.empty}>
                 <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-                  No comments yet. Be the first!
+                  Could not load comments
                 </Text>
+                <TouchableOpacity
+                  style={[styles.retryBtn, { backgroundColor: colors.primary }]}
+                  onPress={() => {
+                    setCommentsError(null);
+                    loadComments();
+                  }}
+                >
+                  <Text style={styles.retryBtnText}>Retry</Text>
+                </TouchableOpacity>
               </View>
+            ) : (
+              tree.length === 0 && (
+                <View style={styles.empty}>
+                  <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+                    No comments yet. Be the first!
+                  </Text>
+                </View>
+              )
             )}
           </>
         }
@@ -309,6 +357,15 @@ const styles = StyleSheet.create({
   commentCount: { marginLeft: "auto", fontSize: 12 },
   empty: { padding: 40, alignItems: "center" },
   emptyText: { fontSize: 14 },
+  errorTitle: { fontSize: 18, fontWeight: "600" },
+  errorText: { fontSize: 14, textAlign: "center", paddingHorizontal: 40 },
+  retryBtn: {
+    marginTop: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  retryBtnText: { color: "#fff", fontSize: 15, fontWeight: "600" },
   footer: { padding: 16, alignItems: "center" },
   footerText: { fontSize: 13, fontWeight: "500" },
 });
