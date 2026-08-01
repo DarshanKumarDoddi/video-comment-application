@@ -42,12 +42,21 @@
 | 2026-07-27 | components/DisplayNamePrompt.tsx — Display name modal |
 | 2026-07-27 | .env file with real Supabase anon key |
 | 2026-07-27 | All 6 phases implemented — zero TypeScript errors |
+| 2026-07-30 | Diagnosed launch crash: `expo-av` (SDK 54 module) vs Hermes RN 0.86 JSI ABI mismatch |
+| 2026-07-30 | Fixed crash: switched app.json `jsEngine` to `jsc`; EAS build 2fddbf10 succeeded |
+| 2026-07-30 | Verified TS types match backend Python models; fixed like route to `/api/videos/{id}/like` |
+| 2026-07-30 | Added client-side infinite scroll for comments (PAGE_SIZE 5) and home feed (PAGE_SIZE 10) |
+| 2026-07-30 | Fixed video comment flow: videoId/parentId now propagate through record→preview→watch (was hardcoded mock-1) |
+| 2026-07-30 | Added notification permission-denied banner with settings redirect (Linking.openSettings) |
+| 2026-07-30 | Fixed mock-data leak in fetchVideos (mock videos no longer merged into real backend results) |
+| 2026-07-30 | Committed dcfc6ea; added CRASH_REPORT.md; gitignored *.apk / bugreport-*.zip |
 
 ## In Progress
 
 | Item | Status |
 |------|--------|
-| Phase 6 — Polish | Complete: haptics, error states, pull-to-refresh, empty states |
+| Phase 6 — Polish | Complete: haptics, error states, pull-to-refresh, empty states, infinite scroll |
+| Device QA on JSC build | Pending — install vidtalk-jsc-fix.apk and verify core flows |
 
 ## Known Blockers / Pending Decisions
 
