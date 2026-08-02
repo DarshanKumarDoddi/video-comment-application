@@ -1,0 +1,159 @@
+========================================================================
+VidTalk — Application Crash: End-to-End Root Cause Analysis & Solution
+========================================================================
+Project   : VidTalk (video comments on YouTube videos)
+Platform  : Android (Expo SDK 57, React Native 0.86, Hermes)
+Device    : Oppo F25 Pro Plus (CPH2603IN), Android 16 (API 36), arm64-v8a
+Date      : 2026-08-02
+Status    : RESOLVED — confirmed working on device
+------------------------------------------------------------------------
+
+1. THE PROBLEM
+------------------------------------------------------------------------
+Every Android APK build of VidTalk crashed immediately on launch. On the
+user's device the app showed the splash screen and then closed instantly
+(returned to the home screen). This happened on EVERY build attempt over
+several days, on multiple EAS (Expo Application Services) builds.
+
+2. THE SYMPTOM (from device bug report)
+------------------------------------------------------------------------
+Android crash log (repeated 25 FATAL EXCEPTION blocks):
+
+    java.lang.UnsatisfiedLinkError: dlopen failed: cannot locate symbol
+    "_ZNKR8facebook3jsi5Value8asObjectERNS0_7RuntimeE"
+    referenced by "/data/app/.../base.apk!/lib/arm64-v8a/libexpo-av.so"
+
+Stack:
+    at java.lang.System.loadLibrary(System.java:1765)
+    at expo.modules.av.AVManager.<clinit>(AVManager.java:56)
+    at expo.modules.av.AVPackage.createInternalModules(AVPackage.java:16)
+    ...
+    at com.facebook.react.runtime.ReactInstance.<init>(ReactInstance.kt:183)
+
+3. ROOT CAUSE ANALYSIS
+------------------------------------------------------------------------
+3.1 The offending native symbol
+The symbol that cannot be located demangles to:
+
+    facebook::jsi::Value::asObject(facebook::jsi::Runtime&)
+
+This is a C++ method from Hermes (React Native's JavaScript engine),
+part of the JSI (JavaScript Interface) ABI.
+
+3.2 Why it failed
+The crash is caused by `expo-av@16.0.8`, a video/audio native module:
+
+  * `expo-av` is a legacy module from Expo SDK 54. It was deprecated in
+    SDK 54 and REMOVED from the Expo SDK starting with SDK 55.
+  * The project runs on Expo SDK 57 / React Native 0.86.
+  * `expo-av@16.0.8` ships a PRECOMPILED native library
+    `libexpo-av.so` that was compiled against the Hermes/JSI headers of
+    React Native 0.81 (the SDK 54 era).
+  * The React Native Hermes JSI C++ ABI changed between RN 0.81 and
+    RN 0.86. The symbol emitted by the old `libexpo-av.so` no longer
+    exists in the RN 0.86 runtime Hermes.
+  * At launch, Java's `System.loadLibrary("expo-av")` must resolve every
+    undefined symbol in the .so against already-loaded libraries. It
+    cannot find the missing Hermes symbol, so the Android linker aborts
+    with `UnsatisfiedLinkError`.
+  * This happens during TurboModule initialization — BEFORE any
+    JavaScript executes — so no JavaScript-level fix could ever resolve it.
+
+Verification: `expo-av` is absent from the SDK 57 bundled module list
+(`node_modules/expo/bundledNativeModules.json`), proving it can never be
+aligned to SDK 57 and is an orphaned leftover dependency.
+
+4. WORKAROUNDS ATTEMPTED (and why they failed)
+------------------------------------------------------------------------
+4.1 Switching the JS engine to JavaScriptCore (JSC)
+   Set `"jsEngine": "jsc"` in app.json to bypass Hermes.
+   RESULT: The JSC build STILL crashed on launch.
+   WHY: The missing Hermes JSI symbol lives INSIDE `libexpo-av.so`.
+   Switching the JS engine only removes Hermes from the runtime — it
+   removes the very symbols the broken library needs to resolve.
+   A JS-engine swap cannot repair a broken native library.
+
+4.2 Disabling the New Architecture
+   Set `"newArchEnabled": false" in app.json.
+   RESULT: Had no effect.
+   WHY: Discovered that Expo SDK 55+ (React Native 0.82+) ALWAYS runs on
+   the New Architecture and the option to disable it was REMOVED. The
+   app was always running new-architecture + Hermes regardless.
+
+KEY INSIGHT: The root cause was NEVER the JS engine or the architecture.
+It was the presence of `expo-av` — an incompatible native library. Both
+workarounds were dead ends because they treated the symptom, not the cause.
+
+5. THE FIX
+------------------------------------------------------------------------
+Remove `expo-av` entirely and migrate to `expo-video` — the official,
+SDK-57-supported replacement from the Expo team.
+
+Steps taken:
+  1. `npm uninstall expo-av`
+     -> `expo-av` removed from package.json and package-lock.json, so no
+        `libexpo-av.so` is included in any future build.
+
+  2. `npx expo install expo-video`
+     -> Installed `expo-video@~57.0.2` (the SDK-correct version) and its
+        config plugin was auto-added to app.json.
+
+  3. Migrated the two components that used expo-av:
+
+     a) components/CommentItem.tsx (video-comment playback)
+        - Replaced `import { Video, ResizeMode } from "expo-av"` with
+          `import { useVideoPlayer, VideoView } from "expo-video"`.
+        - Created a small `CommentVideo` child component that calls the
+          `useVideoPlayer(uri, ...)` hook (hooks must be unconditional),
+          rendering a `<VideoView player nativeControls contentFit>/>`.
+        - The expo-video API is React-hooks based, unlike expo-av's
+          declarative `<Video>` element.
+
+     b) app/video-record/preview.tsx (recorded-video preview screen)
+        - Replaced the expo-av `<Video>` with
+          `useVideoPlayer(uri, p => { p.loop = true; p.play(); })` plus
+          `<VideoView nativeControls contentFit="contain">`.
+        - Removed the now-unneeded `useRef<Video>`.
+
+  4. Cleaned up the dead workarounds in app.json:
+        - Removed `"jsEngine": "jsc"` (reverted to Hermes, the SDK 57
+          default).
+        - Removed `"newArchEnabled": false"` (a no-op on SDK 57).
+
+  5. Validated the codebase:
+        - `npx tsc --noEmit`  -> 0 TypeScript errors.
+        - Confirmed zero remaining references to `expo-av` in source.
+
+6. VERIFICATION
+------------------------------------------------------------------------
+  * EAS build b8db22da-f003-4461-8275-6ebaf1fc3bcd (profile: preview,
+    commit 2837595) completed successfully.
+  * The APK was installed on the Oppo F25 Pro Plus (after uninstalling
+    the previous app) and the app NOW LAUNCHES successfully past the
+    splash screen. Crash is confirmed fixed on device.
+
+7. LESSONS LEARNED
+------------------------------------------------------------------------
+  * Never mix a native module compiled for an older React Native /
+    Expo SDK into a newer SDK project — the precompiled .so links
+    against engine internals (JSI ABI) that change between versions.
+  * `UnsatisfiedLinkError` at launch = native library incompatibility.
+    It happens before JS runs, so it cannot be debugged or fixed in JS.
+  * Prefer the Expo-supported replacement for any deprecated package
+    (`expo-av` -> `expo-video` / `expo-audio`) and install via
+    `npx expo install` so the SDK-correct version is chosen.
+  * Use `npx expo-doctor` and `npx expo install --check` to catch
+    out-of-sync native dependencies before shipping a build.
+
+8. FILES CHANGED
+------------------------------------------------------------------------
+  package.json / package-lock.json   : expo-av removed, expo-video added
+  app.json                           : expo-video plugin; removed dead flags
+  components/CommentItem.tsx         : migrated to expo-video
+  app/video-record/preview.tsx       : migrated to expo-video
+  CRASH_REPORT.md                    : full crash analysis & fix history
+  memory.md                          : project state log updated
+
+========================================================================
+Report generated: 2026-08-02
+========================================================================
