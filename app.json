@@ -7,7 +7,6 @@
     "icon": "./assets/icon.png",
     "scheme": "vidtalk",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": false,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.vidtalk.app"
@@ -20,7 +19,6 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "package": "com.vidtalk.app",
-      "jsEngine": "jsc",
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "android.permission.CAMERA",
@@ -45,7 +43,8 @@
           "iosAccessGroup": "com.vidtalk.app"
         }
       ],
-      "expo-splash-screen"
+      "expo-splash-screen",
+      "expo-video"
     ],
     "splash": {
       "image": "./assets/icon.png",

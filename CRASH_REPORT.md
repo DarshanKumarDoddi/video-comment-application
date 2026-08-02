@@ -101,14 +101,27 @@ At launch, `AVManager.<clinit>` calls `System.loadLibrary("expo-av")`. `dlopen` 
 | `react-native-safe-area-context` | 5.8.0 | ~5.7.0 |
 | `expo-constants` / `expo-image-picker` / `expo-notifications` / `expo-router` | patch behind | ~57.0.x |
 
-## Fix Applied
+## Fix History
 
-Switched `app.json` to `"jsEngine": "jsc"` (JavaScriptCore) to bypass Hermes entirely, eliminating the Hermes JSI ABI mismatch. Build `2fddbf10-76db-4142-9863-64718cbcb618` is running to verify.
+1. **JSC workaround (FAILED — expected):** Switched `app.json` to `"jsEngine": "jsc"`. Build `2fddbf10` and `194f09f1` still crashed on launch. This was predictable: the missing Hermes JSI symbol lives inside `libexpo-av.so`, so removing Hermes from the runtime only removes the very symbols the library needs. Engine swaps cannot fix a broken native library.
 
-## Long-Term Fix
+2. **New Architecture discovery:** SDK 55+ (RN 0.82+) **always runs on the New Architecture — it cannot be disabled.** `newArchEnabled: false` in `app.json` had no effect; the app was always new-arch + Hermes. The prior `jsEngine: "jsc"` and `newArchEnabled: false` flags have both been removed as dead workarounds.
 
-- Remove `expo-av` and migrate to a supported replacement (`expo-audio` / `expo-video`) or pin the project to a lower Expo SDK that still bundles `expo-av`.
-- Run `npx expo install --fix` to align all other dependencies to SDK 57 versions.
+## Fix Applied (2026-08-02) — the real fix
+
+Removed `expo-av` entirely and migrated to `expo-video@~57.0.2` (the official SDK 57 replacement):
+
+- `npm uninstall expo-av` — gone from `package.json` and `package-lock.json`; no `libexpo-av.so` in the next build.
+- `npx expo install expo-video` — added config plugin to `app.json`.
+- `components/CommentItem.tsx` — `<Video>`/`ResizeMode` from `expo-av` replaced with `useVideoPlayer` + `<VideoView>` (extracted into a `CommentVideo` child component so the hook is unconditional).
+- `app/video-record/preview.tsx` — `<Video>` preview replaced with `useVideoPlayer` + `<VideoView nativeControls contentFit="contain">`.
+- Removed `"jsEngine": "jsc"` (back to Hermes, the SDK 57 default) and `"newArchEnabled": false` (no-op on SDK 57) from `app.json`.
+
+`npx tsc --noEmit` passes. Remaining `expo-doctor` version drift (RNGH 3.1.0 vs ~2.32.0, patch-level Expo bumps) is pre-existing, unrelated to this crash, and left untouched.
+
+## Verification
+
+New EAS build pending. Test on device: uninstall the old `com.vidtalk.app` first, install the new APK, confirm the app launches past splash.
 
 ## Raw Logs
 

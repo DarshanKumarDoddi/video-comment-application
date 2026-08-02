@@ -50,13 +50,18 @@
 | 2026-07-30 | Added notification permission-denied banner with settings redirect (Linking.openSettings) |
 | 2026-07-30 | Fixed mock-data leak in fetchVideos (mock videos no longer merged into real backend results) |
 | 2026-07-30 | Committed dcfc6ea; added CRASH_REPORT.md; gitignored *.apk / bugreport-*.zip |
+| 2026-08-02 | JSC build (194f09f1) confirmed STILL crashing — engine swap can't fix a broken native lib |
+| 2026-08-02 | Discovered SDK 57 always runs New Architecture (newArchEnabled:false is a no-op on RN 0.82+) |
+| 2026-08-02 | Removed expo-av entirely; migrated both video components to expo-video@57.0.2 |
+| 2026-08-02 | Removed dead workarounds from app.json: `jsEngine: "jsc"` and `newArchEnabled: false` |
+| 2026-08-02 | npx tsc --noEmit passes; new EAS build kicked off to verify |
 
 ## In Progress
 
 | Item | Status |
 |------|--------|
 | Phase 6 — Polish | Complete: haptics, error states, pull-to-refresh, empty states, infinite scroll |
-| Device QA on JSC build | Pending — install vidtalk-jsc-fix.apk and verify core flows |
+| Device QA on new APK | Pending — install latest build (expo-av removed), uninstall old app first, verify launch |
 
 ## Known Blockers / Pending Decisions
 

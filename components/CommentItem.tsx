@@ -8,13 +8,27 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-import { Video, ResizeMode } from "expo-av";
+import { useVideoPlayer, VideoView } from "expo-video";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useTheme } from "../context/ThemeContext";
 import { CommentWithReplies } from "../types";
 import { getTimeAgo, formatTimestamp } from "../lib/utils";
 import { hapticLight, hapticMedium } from "../lib/haptics";
+
+function CommentVideo({ uri }: { uri: string }) {
+  const player = useVideoPlayer({ uri }, (p) => {
+    p.muted = true;
+  });
+  return (
+    <VideoView
+      player={player}
+      style={styles.videoContainer}
+      contentFit="contain"
+      nativeControls
+    />
+  );
+}
 
 interface CommentItemProps {
   comment: CommentWithReplies;
@@ -103,16 +117,7 @@ export default function CommentItem({
         )}
       </View>
 
-      {comment.video_url && (
-        <Video
-          source={{ uri: comment.video_url }}
-          style={styles.videoContainer}
-          resizeMode={ResizeMode.CONTAIN}
-          useNativeControls
-          shouldPlay={false}
-          isMuted
-        />
-      )}
+      {comment.video_url && <CommentVideo uri={comment.video_url} />}
 
       {comment.text_content && (
         <Text style={[styles.body, { color: colors.textPrimary }]}>

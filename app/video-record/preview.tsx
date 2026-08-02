@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { Video, ResizeMode } from "expo-av";
+import { useVideoPlayer, VideoView } from "expo-video";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTheme } from "../../context/ThemeContext";
@@ -21,7 +21,10 @@ export default function VideoPreviewScreen() {
   }>();
   const { colors } = useTheme();
   const router = useRouter();
-  const videoRef = useRef<Video>(null);
+  const player = useVideoPlayer(uri ?? "", (p) => {
+    p.loop = true;
+    p.play();
+  });
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string>("");
 
@@ -67,14 +70,11 @@ export default function VideoPreviewScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <Video
-        ref={videoRef}
-        source={{ uri }}
+      <VideoView
+        player={player}
         style={styles.video}
-        resizeMode={ResizeMode.CONTAIN}
-        shouldPlay
-        isLooping
-        useNativeControls
+        contentFit="contain"
+        nativeControls
       />
 
       <View style={styles.bottomBar}>
