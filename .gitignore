@@ -45,3 +45,8 @@ bugreport-*.zip
 # generated native folders
 /ios
 /android
+
+# backend
+backend/venv/
+backend/__pycache__/
+backend/.env
