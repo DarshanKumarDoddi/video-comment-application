@@ -55,13 +55,14 @@
 | 2026-08-02 | Removed expo-av entirely; migrated both video components to expo-video@57.0.2 |
 | 2026-08-02 | Removed dead workarounds from app.json: `jsEngine: "jsc"` and `newArchEnabled: false` |
 | 2026-08-02 | npx tsc --noEmit passes; new EAS build kicked off to verify |
+| 2026-08-02 | **CRASH FIXED — confirmed on device.** Build b8db22da (expo-av removed) launches successfully past splash |
 
 ## In Progress
 
 | Item | Status |
 |------|--------|
 | Phase 6 — Polish | Complete: haptics, error states, pull-to-refresh, empty states, infinite scroll |
-| Device QA on new APK | Pending — install latest build (expo-av removed), uninstall old app first, verify launch |
+| Device QA on new APK | Done — app launches on Oppo F25 Pro Plus (build b8db22da). Next: verify video playback + comment flows |
 
 ## Known Blockers / Pending Decisions
 

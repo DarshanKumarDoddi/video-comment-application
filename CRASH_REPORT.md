@@ -121,7 +121,7 @@ Removed `expo-av` entirely and migrated to `expo-video@~57.0.2` (the official SD
 
 ## Verification
 
-New EAS build pending. Test on device: uninstall the old `com.vidtalk.app` first, install the new APK, confirm the app launches past splash.
+**CONFIRMED FIXED 2026-08-02.** Build `b8db22da-f003-4461-8275-6ebaf1fc3bcd` (commit `2837595`, `expo-av` removed, `expo-video` migration) launches successfully past splash on the Oppo F25 Pro Plus. APK: `https://expo.dev/artifacts/eas/u6tPIDAlsc9JZjyiRKPgSoYtoLvb_lWAJ4QA-LBdbnY.apk`
 
 ## Raw Logs
 
