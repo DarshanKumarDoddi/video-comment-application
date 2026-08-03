@@ -1,6 +1,6 @@
 # Project Phases
 
-## Current Phase: Phase 6
+## Current Phase: Phase 2 — Core UI & Comment System (verification)
 
 ---
 
@@ -20,14 +20,14 @@
 - Utility modules: YouTube ID parser, time-ago formatter, thumbnail URL builder
 
 **Exit Criteria**:
-- [ ] App initializes and runs with `npx expo start`
-- [ ] Tab navigation works (5 tabs)
-- [ ] Home screen shows video grid with mock data
-- [ ] Watch screen renders player + comment thread
-- [ ] Auth screen has functional login/signup form
-- [ ] Theme toggle works (light ↔ dark)
-- [ ] All TypeScript types match backend Python models
-- [ ] API layer is switchable between mock and real
+- [x] App initializes and runs with `npx expo start`
+- [x] Tab navigation works (5 tabs)
+- [x] Home screen shows video grid with mock data
+- [x] Watch screen renders player + comment thread
+- [x] Auth screen has functional login/signup form
+- [x] Theme toggle works (light ↔ dark)
+- [x] All TypeScript types match backend Python models
+- [x] API layer is switchable between mock and real
 - [x] Zero TypeScript errors
 
 ---

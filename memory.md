@@ -61,6 +61,7 @@
 | 2026-08-02 | Copied FastAPI backend into this repo (`backend/`) — read-only from comment_video, no files modified there; guarded `../frontend` static mount; all 13 routes verified |
 | 2026-08-02 | Backend `.env` + `.env.example` added (gitignored); gitignore rules for venv/__pycache__ |
 | 2026-08-02 | Committed a49d7a1 (backend in-repo) |
+| 2026-08-02 | Phase 1 VERIFIED complete — tsc 0 errors, Metro android bundle OK, 5 tabs, grid/watch/auth/theme confirmed, types match backend, mock↔real switchable |
 
 ## In Progress
 
