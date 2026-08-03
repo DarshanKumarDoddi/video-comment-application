@@ -56,6 +56,11 @@
 | 2026-08-02 | Removed dead workarounds from app.json: `jsEngine: "jsc"` and `newArchEnabled: false` |
 | 2026-08-02 | npx tsc --noEmit passes; new EAS build kicked off to verify |
 | 2026-08-02 | **CRASH FIXED — confirmed on device.** Build b8db22da (expo-av removed) launches successfully past splash |
+| 2026-08-02 | Created `app_crash_solution.txt` (end-to-end crash report); committed 3e1b6c8 and pushed all work to GitHub |
+| 2026-08-02 | Decision: keep two-repo split — mobile work only in `video-comment-mobile`; `comment_video` untouched |
+| 2026-08-02 | Copied FastAPI backend into this repo (`backend/`) — read-only from comment_video, no files modified there; guarded `../frontend` static mount; all 13 routes verified |
+| 2026-08-02 | Backend `.env` + `.env.example` added (gitignored); gitignore rules for venv/__pycache__ |
+| 2026-08-02 | Committed a49d7a1 (backend in-repo) |
 
 ## In Progress
 
@@ -63,14 +68,16 @@
 |------|--------|
 | Phase 6 — Polish | Complete: haptics, error states, pull-to-refresh, empty states, infinite scroll |
 | Device QA on new APK | Done — app launches on Oppo F25 Pro Plus (build b8db22da). Next: verify video playback + comment flows |
+| UI iteration | Upcoming — dev loop via Expo Go (`npx expo start`) + hot reload; no reinstalls |
 
 ## Known Blockers / Pending Decisions
 
 | Item | Details |
 |------|---------|
-| Cloudinary upload preset | Needs to be created in Cloudinary dashboard |
-| Google OAuth | Needs EXPO_PUBLIC_GOOGLE_CLIENT_ID in .env |
+| Cloudinary upload preset | `mobile_app_upload` — used by direct-upload path (lib/cloudinary.ts); verify it exists in Cloudinary dashboard |
+| Google OAuth | Needs EXPO_PUBLIC_GOOGLE_CLIENT_ID in .env; verify Android SHA-1 registered in Google Cloud Console |
 | API secrets in .env | Should rotate if repo is public |
+| Backend deployment | Backend lives in-repo (backend/); deploy target + URL not yet decided for the copy |
 
 ## Notes
 

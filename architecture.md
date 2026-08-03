@@ -32,8 +32,10 @@ User opens app
 
 ```mermaid
 graph TD
-    A[Mobile App<br/>React Native / Expo] -->|Auth + Data Queries| B[Supabase<br/>PostgreSQL + Auth]
-    A -->|Video Upload/Download| C[Cloudinary<br/>Video Storage CDN]
+    A[Mobile App<br/>React Native / Expo] -->|Videos, Comments, Uploads| B[FastAPI Backend<br/>in-repo backend/]
+    A -->|Auth| S[Supabase Auth]
+    B --> S
+    B -->|Video Upload/Download| C[Cloudinary<br/>Video Storage CDN]
     A -->|Video Playback| D[YouTube IFrame<br/>Embed Player]
 
     subgraph Mobile App
@@ -62,12 +64,13 @@ mobile/
 │   ├── auth/
 │   │   └── login.tsx             # Login / sign-up
 │   └── video-record/
-│       └── index.tsx             # Camera screen for recording video comments
+│       ├── index.tsx             # Camera screen for recording video comments
+│       └── preview.tsx           # Preview recorded clip before posting
 │
 ├── components/                   # Reusable UI components
 │   ├── VideoPlayer.tsx           # YouTube embed wrapper
 │   ├── CommentThread.tsx         # Recursive comment tree
-│   ├── CommentItem.tsx           # Single comment card
+│   ├── CommentItem.tsx           # Single comment card (expo-video playback)
 │   ├── CommentComposer.tsx       # Text/video comment input
 │   ├── TimestampMarker.tsx       # Time badge on scrubber
 │   ├── VideoCard.tsx             # Video thumbnail card
@@ -80,6 +83,13 @@ mobile/
 │   ├── youtube.ts                # YouTube URL parsing, video ID extraction
 │   ├── cloudinary.ts             # Cloudinary direct upload from mobile
 │   └── utils.ts                  # Formatting, time-ago, helpers
+│
+├── backend/                      # FastAPI backend (this repo)
+│   ├── main.py                   # App entry — auth'd comment + upload endpoints
+│   ├── config.py                 # Env config (Supabase, Cloudinary)
+│   ├── models/                   # Pydantic models (user, video, comment)
+│   ├── routers/                  # auth.py, videos.py, comments.py
+│   └── services/                 # supabase_client, cloudinary_client
 │
 ├── hooks/                        # Custom React hooks
 │   └── useYouTubePlayer.ts       # YouTube player control + time tracking
@@ -110,6 +120,8 @@ mobile/
 | **Database + Auth** | Supabase (PostgreSQL) | Managed Postgres with built-in auth, row-level security, and real-time subscriptions. Free tier. |
 | **Authentication** | Supabase Auth + expo-auth-session | Google OAuth via in-app browser. Tokens stored in expo-secure-store (iOS Keychain / Android Keystore). |
 | **Video Playback** | react-native-youtube-iframe | Wraps YouTube IFrame API in a WebView. Reliable, well-maintained. |
+| **Video Comments** | expo-video | Recorded video-comment clips playback (replaces deprecated expo-av). |
+| **Backend API** | FastAPI (in-repo `backend/`) | Auth, videos, comments, Cloudinary video upload. Serves `/api/*` endpoints. |
 | **Camera** | expo-camera | Native camera access on both platforms. Reliable, full control over recording. |
 | **Video Comments** | Cloudinary | Free tier, built-in compression, thumbnail generation, global CDN. Direct upload from mobile (no CORS issues). |
 | **Notifications** | expo-notifications + Expo Push Service | Native push notifications on both platforms. Free via Expo. |

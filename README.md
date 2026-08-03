@@ -10,9 +10,11 @@ Text comments on videos are flat and emotionless. VidTalk adds a video comment l
 
 - **Runtime**: React Native + Expo SDK 57 (TypeScript)
 - **Navigation**: Expo Router (file-based)
+- **Backend**: FastAPI (in-repo, `backend/`) — auth, videos, comments, Cloudinary upload
 - **Database + Auth**: Supabase (PostgreSQL)
 - **Video Playback**: react-native-youtube-iframe
-- **Video Storage**: Cloudinary (direct unsigned upload)
+- **Video Comments**: expo-video (recorded clips + playback)
+- **Video Storage**: Cloudinary (signed upload via backend; direct unsigned upload fallback)
 - **Camera**: expo-camera (Phase 3)
 - **Push Notifications**: expo-notifications (Phase 5)
 - **Auth Storage**: expo-secure-store (iOS Keychain / Android Keystore)
@@ -63,6 +65,21 @@ cp .env.example .env
 
 Set `EXPO_PUBLIC_USE_MOCK_DATA=false` to connect to the live backend.
 
+### Backend
+
+The FastAPI backend lives in `backend/`. Set up and run it:
+
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate       # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+cp .env.example .env           # fill in Supabase + Cloudinary keys
+uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+API docs at `http://localhost:8000/api/docs`. Routes: `/api/auth/*`, `/api/videos`, `/api/videos/{id}/comments`, `/api/videos/{id}/like`, `/api/comments`, `/api/upload/video-comment`.
+
 See [architecture.md](architecture.md#4-tech-stack) for all environment variables.
 
 ## Quick Start
@@ -88,6 +105,7 @@ video-comment-mobile/
 ├── types/            # TypeScript interfaces
 ├── constants/        # Theme tokens (colors, spacing)
 ├── context/          # React Context providers
+├── backend/          # FastAPI backend (auth, videos, comments)
 └── assets/           # Icons, splash screen
 ```
 
@@ -103,11 +121,12 @@ See [architecture.md](architecture.md#3-folder--file-structure) for full breakdo
 | [phases.md](phases.md) | Build phases with deliverables and exit criteria |
 | [design.md](design.md) | Color palettes, typography, component styles |
 | [memory.md](memory.md) | Running log of completed work and blockers |
+| [app_crash_solution.txt](app_crash_solution.txt) | End-to-end crash root-cause analysis & fix |
 
 ## Development
 
 ```bash
-npx expo start          # Dev server with hot reload
+npx expo start          # Dev server with hot reload (scan QR in Expo Go)
 npx tsc --noEmit        # TypeScript type check
 ```
 
@@ -115,7 +134,7 @@ See [rules.md](rules.md) for coding conventions, approved libraries, and AI-assi
 
 ## Roadmap
 
-**Current phase**: Phase 1 — Project Setup & Foundation. See [phases.md](phases.md) for the full 6-phase roadmap.
+**Current phase**: All 6 phases implemented. Launch crash (expo-av) fixed — see [app_crash_solution.txt](app_crash_solution.txt). UI polish + device QA in progress. See [phases.md](phases.md) for the full roadmap.
 
 ## License
 
