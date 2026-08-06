@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   View,
   Text,
-  TextInput,
   FlatList,
   StyleSheet,
   ActivityIndicator,
@@ -13,7 +12,8 @@ import { useRouter } from "expo-router";
 import { useTheme } from "../../context/ThemeContext";
 import { fetchVideos } from "../../lib/api";
 import { Video } from "../../types";
-import VideoCard from "../../components/VideoCard";
+import AppHeader from "../../components/AppHeader";
+import SearchResultCard from "../../components/SearchResultCard";
 
 export default function SearchScreen() {
   const { colors } = useTheme();
@@ -45,17 +45,15 @@ export default function SearchScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.searchBar, { borderColor: colors.border }]}>
-        <TextInput
-          style={[styles.input, { color: colors.textPrimary, backgroundColor: colors.surface }]}
-          placeholder="Search videos..."
-          placeholderTextColor={colors.secondary}
-          value={query}
-          onChangeText={setQuery}
-          onSubmitEditing={searchVideos}
-          returnKeyType="search"
-        />
-      </View>
+      <AppHeader
+        searchMode
+        showBack
+        onBack={() => router.back()}
+        searchValue={query}
+        onSearchChange={setQuery}
+        onSubmitSearch={searchVideos}
+        searchPlaceholder="Search VidTalk"
+      />
 
       {loading ? (
         <View style={styles.center}>
@@ -65,11 +63,9 @@ export default function SearchScreen() {
         <FlatList
           data={results}
           keyExtractor={(item) => item.id}
-          numColumns={2}
-          columnWrapperStyle={styles.row}
           contentContainerStyle={styles.list}
           renderItem={({ item }) => (
-            <VideoCard
+            <SearchResultCard
               video={item}
               onPress={() => router.push(`/watch/${item.id}`)}
             />
@@ -112,18 +108,10 @@ export default function SearchScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  empty: { flex: 1, justifyContent: "center", alignItems: "center", gap: 8, paddingTop: 60 },
+  empty: { alignItems: "center", gap: 8, paddingTop: 60 },
   emptyTitle: { fontSize: 16, fontWeight: "600" },
   emptySub: { fontSize: 13 },
-  searchBar: { padding: 12 },
-  input: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 8,
-    fontSize: 16,
-  },
-  row: { paddingHorizontal: 12, gap: 12 },
-  list: { paddingVertical: 12, gap: 12 },
+  list: { paddingVertical: 4 },
   retryBtn: {
     marginTop: 12,
     paddingHorizontal: 24,

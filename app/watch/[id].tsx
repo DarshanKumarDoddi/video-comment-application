@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   ScrollView,
 } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../context/ThemeContext";
 import { fetchVideo, fetchComments, postComment, likeComment } from "../../lib/api";
@@ -19,6 +19,8 @@ import VideoPlayer from "../../components/VideoPlayer";
 import CommentThread from "../../components/CommentThread";
 import CommentComposer from "../../components/CommentComposer";
 import TimestampMarker from "../../components/TimestampMarker";
+import AppHeader from "../../components/AppHeader";
+import ChannelAvatar from "../../components/ChannelAvatar";
 
 type SortMode = "latest" | "timestamp";
 
@@ -27,6 +29,7 @@ const PAGE_SIZE = 5;
 export default function WatchScreen() {
   const { id, videoUrl, parentId } = useLocalSearchParams<{ id: string; videoUrl?: string; parentId?: string }>();
   const { colors } = useTheme();
+  const router = useRouter();
   const [video, setVideo] = useState<Video | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,6 +39,10 @@ export default function WatchScreen() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [commentsError, setCommentsError] = useState<string | null>(null);
+  const [subscribed, setSubscribed] = useState(false);
+  const [liked, setLiked] = useState(false);
+  const [disliked, setDisliked] = useState(false);
+  const [saved, setSaved] = useState(false);
   const { playerRef, seekTo, getCurrentTime } = useYouTubePlayer();
   const timeTrackerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [liveCurrentTime, setLiveCurrentTime] = useState<number | null>(null);
@@ -155,6 +162,7 @@ export default function WatchScreen() {
   if (loading) {
     return (
       <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <Stack.Screen options={{ headerShown: false }} />
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
@@ -163,6 +171,7 @@ export default function WatchScreen() {
   if (error) {
     return (
       <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <Stack.Screen options={{ headerShown: false }} />
         <Ionicons name="cloud-offline-outline" size={64} color={colors.secondary} />
         <Text style={[styles.errorTitle, { color: colors.textPrimary }]}>
           Could not load video
@@ -192,6 +201,9 @@ export default function WatchScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <AppHeader showBack onBack={() => router.back()} />
+
       <FlatList
         data={[]}
         renderItem={null}
@@ -223,6 +235,99 @@ export default function WatchScreen() {
               <Text style={[styles.videoTitle, { color: colors.textPrimary }]}>
                 {video?.title ?? "Video"}
               </Text>
+
+              <View style={styles.channelRow}>
+                <ChannelAvatar name="VidTalk" size={40} />
+                <View style={styles.channelText}>
+                  <Text style={[styles.channelName, { color: colors.textPrimary }]}>
+                    VidTalk
+                  </Text>
+                  <Text style={[styles.channelSub, { color: colors.textSecondary }]}>
+                    Community channel
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={[
+                    styles.subscribeBtn,
+                    subscribed
+                      ? {
+                          backgroundColor: colors.surface,
+                          borderWidth: 1,
+                          borderColor: colors.border,
+                        }
+                      : { backgroundColor: colors.subscribeBg },
+                  ]}
+                  onPress={() => setSubscribed(!subscribed)}
+                >
+                  <Text
+                    style={[
+                      styles.subscribeText,
+                      {
+                        color: subscribed
+                          ? colors.textSecondary
+                          : colors.subscribeText,
+                      },
+                    ]}
+                  >
+                    {subscribed ? "Subscribed" : "Subscribe"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.actionBar}>
+                <TouchableOpacity
+                  style={styles.actionBtn}
+                  onPress={() => setLiked(!liked)}
+                >
+                  <Ionicons
+                    name={liked ? "thumbs-up" : "thumbs-up-outline"}
+                    size={22}
+                    color={liked ? colors.primary : colors.iconBtn}
+                  />
+                  <Text
+                    style={[
+                      styles.actionText,
+                      { color: liked ? colors.primary : colors.iconBtn },
+                    ]}
+                  >
+                    {liked ? "Like" : "Liked"}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.actionBtn}
+                  onPress={() => setDisliked(!disliked)}
+                >
+                  <Ionicons
+                    name={disliked ? "thumbs-down" : "thumbs-down-outline"}
+                    size={22}
+                    color={disliked ? colors.primary : colors.iconBtn}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.actionBtn}>
+                  <Ionicons name="share-outline" size={22} color={colors.iconBtn} />
+                  <Text style={[styles.actionText, { color: colors.iconBtn }]}>
+                    Share
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.actionBtn}
+                  onPress={() => setSaved(!saved)}
+                >
+                  <Ionicons
+                    name={saved ? "bookmark" : "bookmark-outline"}
+                    size={22}
+                    color={saved ? colors.primary : colors.iconBtn}
+                  />
+                  <Text
+                    style={[
+                      styles.actionText,
+                      { color: saved ? colors.primary : colors.iconBtn },
+                    ]}
+                  >
+                    {saved ? "Saved" : "Save"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
             {markers.length > 0 && (
@@ -242,45 +347,54 @@ export default function WatchScreen() {
               </View>
             )}
 
-            <View style={[styles.sortBar, { borderTopColor: colors.border }]}>
-              <TouchableOpacity
-                style={[
-                  styles.sortBtn,
-                  sortMode === "latest" && { backgroundColor: colors.primary },
-                ]}
-                onPress={() => setSortMode("latest")}
-              >
-                <Text
-                  style={[
-                    styles.sortBtnText,
-                    { color: sortMode === "latest" ? "#fff" : colors.textSecondary },
-                  ]}
-                >
-                  Latest
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.sortBtn,
-                  sortMode === "timestamp" && { backgroundColor: colors.primary },
-                ]}
-                onPress={() => setSortMode("timestamp")}
-              >
-                <Text
-                  style={[
-                    styles.sortBtnText,
-                    {
-                      color:
-                        sortMode === "timestamp" ? "#fff" : colors.textSecondary,
-                    },
-                  ]}
-                >
-                  Timestamp
-                </Text>
-              </TouchableOpacity>
-              <Text style={[styles.commentCount, { color: colors.textSecondary }]}>
-                {comments.length} comments
+            <View style={[styles.commentsHeader, { borderTopColor: colors.border }]}>
+              <Text style={[styles.commentCount, { color: colors.textPrimary }]}>
+                {comments.length} Comments
               </Text>
+              <View style={styles.sortGroup}>
+                <TouchableOpacity
+                  style={[
+                    styles.sortBtn,
+                    sortMode === "latest" && { backgroundColor: colors.chipActiveBg },
+                  ]}
+                  onPress={() => setSortMode("latest")}
+                >
+                  <Text
+                    style={[
+                      styles.sortBtnText,
+                      {
+                        color:
+                          sortMode === "latest"
+                            ? colors.chipActiveText
+                            : colors.chipText,
+                      },
+                    ]}
+                  >
+                    Latest
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.sortBtn,
+                    sortMode === "timestamp" && { backgroundColor: colors.chipActiveBg },
+                  ]}
+                  onPress={() => setSortMode("timestamp")}
+                >
+                  <Text
+                    style={[
+                      styles.sortBtnText,
+                      {
+                        color:
+                          sortMode === "timestamp"
+                            ? colors.chipActiveText
+                            : colors.chipText,
+                      },
+                    ]}
+                  >
+                    Timestamp
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
             <CommentComposer
@@ -331,30 +445,55 @@ export default function WatchScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  videoInfo: { padding: 16 },
-  videoTitle: { fontSize: 22, fontWeight: "600" },
-  markersRow: {
+  videoInfo: { paddingHorizontal: 12, paddingVertical: 12 },
+  videoTitle: { fontSize: 17, fontWeight: "500", lineHeight: 22 },
+  channelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginTop: 12,
+  },
+  channelText: { flex: 1 },
+  channelName: { fontSize: 14, fontWeight: "600" },
+  channelSub: { fontSize: 12 },
+  subscribeBtn: {
     paddingHorizontal: 16,
+    paddingVertical: 9,
+    borderRadius: 18,
+  },
+  subscribeText: { fontSize: 14, fontWeight: "600" },
+  actionBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 12,
+  },
+  actionBtn: { flexDirection: "row", alignItems: "center", gap: 6 },
+  actionText: { fontSize: 13, fontWeight: "500" },
+  markersRow: {
+    paddingHorizontal: 12,
     paddingVertical: 8,
     gap: 8,
-    borderTopWidth: 1,
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
   markersLabel: { fontSize: 12, fontWeight: "500" },
-  sortBar: {
+  commentsHeader: {
     flexDirection: "row",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    gap: 8,
-    borderTopWidth: 1,
     alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
+  commentCount: { fontSize: 15, fontWeight: "600", flex: 1 },
+  sortGroup: { flexDirection: "row", gap: 6 },
   sortBtn: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 6,
+    borderRadius: 8,
+    backgroundColor: "transparent",
   },
   sortBtnText: { fontSize: 13, fontWeight: "500" },
-  commentCount: { marginLeft: "auto", fontSize: 12 },
   empty: { padding: 40, alignItems: "center" },
   emptyText: { fontSize: 14 },
   errorTitle: { fontSize: 18, fontWeight: "600" },

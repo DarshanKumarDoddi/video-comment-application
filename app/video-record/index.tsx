@@ -7,7 +7,7 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-import { CameraView, useCameraPermissions } from "expo-camera";
+import { CameraView, useCameraPermissions, useMicrophonePermissions } from "expo-camera";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../context/ThemeContext";
@@ -23,6 +23,7 @@ export default function VideoRecordScreen() {
     parentId?: string;
   }>();
   const [permission, requestPermission] = useCameraPermissions();
+  const [micPermission, requestMicPermission] = useMicrophonePermissions();
   const [facing, setFacing] = useState<"front" | "back">("back");
   const [recording, setRecording] = useState(false);
   const [duration, setDuration] = useState(0);
@@ -90,7 +91,7 @@ export default function VideoRecordScreen() {
     setRecording(false);
   };
 
-  if (!permission) {
+  if (!permission || !micPermission) {
     return (
       <View style={[styles.center, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
@@ -98,19 +99,26 @@ export default function VideoRecordScreen() {
     );
   }
 
-  if (!permission.granted) {
+  if (!permission.granted || !micPermission.granted) {
+    const missingPermission = !micPermission.granted
+      ? "Microphone"
+      : "Camera";
     return (
       <View style={[styles.center, { backgroundColor: colors.background }]}>
-        <Ionicons name="videocam-outline" size={64} color={colors.secondary} />
+        <Ionicons name="mic-off-outline" size={64} color={colors.secondary} />
         <Text style={[styles.permTitle, { color: colors.textPrimary }]}>
-          Camera access needed
+          {missingPermission} access needed
         </Text>
         <Text style={[styles.permSub, { color: colors.textSecondary }]}>
-          Allow camera access to record video comments
+          Allow {missingPermission.toLowerCase()} access to record video
+          comments
         </Text>
         <TouchableOpacity
           style={[styles.permBtn, { backgroundColor: colors.primary }]}
-          onPress={requestPermission}
+          onPress={async () => {
+            if (!permission.granted) await requestPermission();
+            if (!micPermission.granted) await requestMicPermission();
+          }}
         >
           <Text style={styles.permBtnText}>Grant Permission</Text>
         </TouchableOpacity>

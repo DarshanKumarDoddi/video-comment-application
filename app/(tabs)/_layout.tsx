@@ -8,23 +8,26 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
+        headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.secondary,
         tabBarStyle: {
           backgroundColor: colors.background,
           borderTopColor: colors.border,
         },
-        headerStyle: { backgroundColor: colors.background },
-        headerTintColor: colors.textPrimary,
+        tabBarLabelStyle: { fontSize: 11 },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: "Home",
-          headerTitle: "VidTalk",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "home" : "home-outline"}
+              size={size}
+              color={color}
+            />
           ),
         }}
       />
@@ -32,8 +35,12 @@ export default function TabLayout() {
         name="search"
         options={{
           title: "Search",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="search" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "search" : "search-outline"}
+              size={size}
+              color={color}
+            />
           ),
         }}
       />
@@ -42,7 +49,7 @@ export default function TabLayout() {
         options={{
           title: "Upload",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="add-circle" size={size} color={color} />
+            <Ionicons name="add-circle" size={size + 4} color={color} />
           ),
         }}
       />
@@ -50,17 +57,25 @@ export default function TabLayout() {
         name="notifications"
         options={{
           title: "Notifications",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="notifications" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "notifications" : "notifications-outline"}
+              size={size}
+              color={color}
+            />
           ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Profile",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person" size={size} color={color} />
+          title: "You",
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "person-circle" : "person-circle-outline"}
+              size={size + 2}
+              color={color}
+            />
           ),
         }}
       />

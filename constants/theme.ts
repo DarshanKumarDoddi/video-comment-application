@@ -9,6 +9,17 @@ export const lightColors = {
   success: "#10B981",
   border: "#E5E7EB",
   inputBg: "#FFFFFF",
+  chipBg: "#F1F2F3",
+  chipActiveBg: "#111111",
+  chipText: "#0F0F0F",
+  chipActiveText: "#FFFFFF",
+  durationBadge: "rgba(0,0,0,0.8)",
+  avatarBg: "#3B82F6",
+  avatarText: "#FFFFFF",
+  subscribeBg: "#111111",
+  subscribeText: "#FFFFFF",
+  iconBtn: "#030303",
+  headerShadow: "rgba(0,0,0,0.06)",
 };
 
 export const darkColors = {
@@ -22,6 +33,17 @@ export const darkColors = {
   success: "#34D399",
   border: "#334155",
   inputBg: "#1E293B",
+  chipBg: "#263449",
+  chipActiveBg: "#F1F5F9",
+  chipText: "#E2E8F0",
+  chipActiveText: "#0F172A",
+  durationBadge: "rgba(0,0,0,0.8)",
+  avatarBg: "#60A5FA",
+  avatarText: "#0F172A",
+  subscribeBg: "#F1F5F9",
+  subscribeText: "#0F172A",
+  iconBtn: "#F1F5F9",
+  headerShadow: "rgba(0,0,0,0.4)",
 };
 
 export type ThemeColors = typeof lightColors;

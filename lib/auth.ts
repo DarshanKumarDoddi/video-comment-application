@@ -4,6 +4,19 @@ import { User } from "../types";
 
 const USERNAME_KEY = "vidtalk-username";
 
+async function ensureUserRow(
+  userId: string,
+  email: string,
+  username: string
+): Promise<void> {
+  const { error } = await supabase
+    .from("users")
+    .upsert({ id: userId, email, username }, { onConflict: "id" });
+  if (error) {
+    console.warn("ensureUserRow failed:", error.message);
+  }
+}
+
 export async function signIn(
   email: string,
   password: string
@@ -15,6 +28,7 @@ export async function signIn(
   if (error) throw new Error(error.message);
   if (!data.session) throw new Error("Login failed");
   const username = await SecureStore.getItemAsync(USERNAME_KEY);
+  await ensureUserRow(data.user.id, data.user.email ?? "", username ?? "");
   return {
     user: {
       id: data.user.id,
@@ -37,6 +51,7 @@ export async function signUp(
   if (error) throw new Error(error.message);
   if (!data.user) throw new Error("Signup failed");
   await SecureStore.setItemAsync(USERNAME_KEY, username);
+  await ensureUserRow(data.user.id, data.user.email ?? "", username);
   return {
     id: data.user.id,
     email: data.user.email ?? "",

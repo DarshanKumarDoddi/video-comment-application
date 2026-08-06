@@ -34,7 +34,9 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow VidTalk to access your camera for recording video comments."
+          "cameraPermission": "Allow VidTalk to access your camera for recording video comments.",
+          "recordAudioAndroid": true,
+          "microphonePermission": "Allow VidTalk to access your microphone for recording audio with video comments."
         }
       ],
       [

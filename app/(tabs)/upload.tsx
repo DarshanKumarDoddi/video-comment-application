@@ -7,14 +7,19 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  ScrollView,
 } from "react-native";
+import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../context/ThemeContext";
 import { addVideo } from "../../lib/api";
 import { extractVideoId } from "../../lib/youtube";
 import { hapticSuccess, hapticError } from "../../lib/haptics";
+import AppHeader from "../../components/AppHeader";
 
 export default function UploadScreen() {
   const { colors } = useTheme();
+  const router = useRouter();
   const [url, setUrl] = useState("");
   const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(false);
@@ -48,52 +53,56 @@ export default function UploadScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={styles.content}>
+      <AppHeader title="Upload" showBack onBack={() => router.back()} />
+
+      <ScrollView contentContainerStyle={styles.content}>
         <Text style={[styles.heading, { color: colors.textPrimary }]}>
-          Add a Video
+          Add a video
         </Text>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-          Paste a YouTube URL to add it to the feed
+          Paste a YouTube URL to share it on VidTalk
         </Text>
 
-        <View style={styles.form}>
+        <View style={[styles.form, { backgroundColor: colors.surface }]}>
           <Text style={[styles.label, { color: colors.textSecondary }]}>
             YouTube URL
           </Text>
-          <TextInput
+          <View
             style={[
-              styles.input,
-              {
-                color: colors.textPrimary,
-                backgroundColor: colors.surface,
-                borderColor: colors.border,
-              },
+              styles.inputWrap,
+              { borderColor: colors.border, backgroundColor: colors.background },
             ]}
-            placeholder="https://www.youtube.com/watch?v=..."
-            placeholderTextColor={colors.secondary}
-            value={url}
-            onChangeText={setUrl}
-            autoCapitalize="none"
-            keyboardType="url"
-          />
+          >
+            <Ionicons name="link-outline" size={18} color={colors.secondary} />
+            <TextInput
+              style={[styles.input, { color: colors.textPrimary }]}
+              placeholder="https://www.youtube.com/watch?v=..."
+              placeholderTextColor={colors.secondary}
+              value={url}
+              onChangeText={setUrl}
+              autoCapitalize="none"
+              keyboardType="url"
+            />
+          </View>
 
           <Text style={[styles.label, { color: colors.textSecondary }]}>
             Title
           </Text>
-          <TextInput
+          <View
             style={[
-              styles.input,
-              {
-                color: colors.textPrimary,
-                backgroundColor: colors.surface,
-                borderColor: colors.border,
-              },
+              styles.inputWrap,
+              { borderColor: colors.border, backgroundColor: colors.background },
             ]}
-            placeholder="Video title"
-            placeholderTextColor={colors.secondary}
-            value={title}
-            onChangeText={setTitle}
-          />
+          >
+            <Ionicons name="text-outline" size={18} color={colors.secondary} />
+            <TextInput
+              style={[styles.input, { color: colors.textPrimary }]}
+              placeholder="Video title"
+              placeholderTextColor={colors.secondary}
+              value={title}
+              onChangeText={setTitle}
+            />
+          </View>
 
           <TouchableOpacity
             style={[styles.button, { backgroundColor: colors.primary }]}
@@ -103,11 +112,11 @@ export default function UploadScreen() {
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.buttonText}>Add Video</Text>
+              <Text style={styles.buttonText}>Upload</Text>
             )}
           </TouchableOpacity>
         </View>
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -115,22 +124,24 @@ export default function UploadScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 16 },
-  heading: { fontSize: 28, fontWeight: "700", marginBottom: 4 },
-  subtitle: { fontSize: 14, marginBottom: 24 },
-  form: { gap: 12 },
-  label: { fontSize: 14, fontWeight: "500" },
-  input: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+  heading: { fontSize: 22, fontWeight: "700", marginBottom: 4 },
+  subtitle: { fontSize: 14, marginBottom: 20 },
+  form: { borderRadius: 12, padding: 16, gap: 8 },
+  label: { fontSize: 13, fontWeight: "500", marginTop: 4 },
+  inputWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
     borderRadius: 8,
     borderWidth: 1,
-    fontSize: 16,
+    paddingHorizontal: 12,
   },
+  input: { flex: 1, paddingVertical: 12, fontSize: 15 },
   button: {
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: "center",
-    marginTop: 8,
+    marginTop: 12,
   },
   buttonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
 });

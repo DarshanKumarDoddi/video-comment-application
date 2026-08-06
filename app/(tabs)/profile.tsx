@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   View,
   Text,
@@ -9,24 +9,30 @@ import {
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../context/ThemeContext";
-import { getCurrentUser, signOut, setDisplayName } from "../../lib/auth";
-import { User } from "../../types";
+import { signOut, setDisplayName } from "../../lib/auth";
+import { useAuth } from "../../context/AuthContext";
+import AppHeader from "../../components/AppHeader";
+import ChannelAvatar from "../../components/ChannelAvatar";
 import DisplayNamePrompt from "../../components/DisplayNamePrompt";
+
+type IoniconName = keyof typeof Ionicons.glyphMap;
+
+interface ProfileOption {
+  icon: IoniconName;
+  label: string;
+  color: string;
+  onPress: () => void;
+}
 
 export default function ProfileScreen() {
   const { colors, isDark, toggleTheme } = useTheme();
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const { user, setUser } = useAuth();
   const [showNamePrompt, setShowNamePrompt] = useState(false);
-
-  useEffect(() => {
-    getCurrentUser().then(setUser);
-  }, []);
 
   const handleSignOut = async () => {
     try {
       await signOut();
-      setUser(null);
       Alert.alert("Signed out", "You have been signed out.");
     } catch (err: any) {
       Alert.alert("Error", err.message);
@@ -35,72 +41,83 @@ export default function ProfileScreen() {
 
   const handleSetName = async (name: string) => {
     await setDisplayName(name);
-    setUser((prev) => (prev ? { ...prev, username: name } : prev));
+    if (user) setUser({ ...user, username: name });
     setShowNamePrompt(false);
   };
 
+  const options: ProfileOption[] = [
+    user
+      ? {
+          icon: "create-outline",
+          label: user.username ? "Change Display Name" : "Set Display Name",
+          color: colors.primary,
+          onPress: () => setShowNamePrompt(true),
+        }
+      : {
+          icon: "log-in-outline",
+          label: "Sign In",
+          color: colors.primary,
+          onPress: () => router.push("/auth/login"),
+        },
+    {
+      icon: isDark ? "sunny-outline" : "moon-outline",
+      label: isDark ? "Light Mode" : "Dark Mode",
+      color: colors.primary,
+      onPress: toggleTheme,
+    },
+    {
+      icon: "help-circle-outline",
+      label: "Help & Feedback",
+      color: colors.secondary,
+      onPress: () => {},
+    },
+  ];
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={styles.avatarContainer}>
-        <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
-          <Text style={styles.avatarText}>
-            {user?.email?.[0]?.toUpperCase() ?? "U"}
+      <AppHeader title="You" />
+
+      <View style={[styles.headerCard, { borderBottomColor: colors.border }]}>
+        <ChannelAvatar name={user?.username || user?.email || "U"} size={64} />
+        <View style={styles.headerInfo}>
+          <Text style={[styles.name, { color: colors.textPrimary }]}>
+            {user?.username || user?.email || "Guest"}
+          </Text>
+          <Text style={[styles.email, { color: colors.textSecondary }]}>
+            {user?.email ?? "Not signed in"}
           </Text>
         </View>
-        <Text style={[styles.email, { color: colors.textPrimary }]}>
-          {user?.email ?? "Not signed in"}
-        </Text>
-        {user?.username && (
-          <Text style={[styles.username, { color: colors.textSecondary }]}>
-            @{user.username}
-          </Text>
-        )}
       </View>
 
       <View style={styles.options}>
-        <TouchableOpacity
-          style={[styles.option, { borderBottomColor: colors.border }]}
-          onPress={() => setShowNamePrompt(true)}
-        >
-          <Ionicons name="pencil" size={20} color={colors.primary} />
-          <Text style={[styles.optionText, { color: colors.textPrimary }]}>
-            {user?.username ? "Change Display Name" : "Set Display Name"}
-          </Text>
-        </TouchableOpacity>
+        {options.map((option, index) => (
+          <TouchableOpacity
+            key={index}
+            style={[styles.option, { borderBottomColor: colors.border }]}
+            onPress={option.onPress}
+          >
+            <View style={[styles.iconCircle, { backgroundColor: colors.surface }]}>
+              <Ionicons name={option.icon} size={20} color={option.color} />
+            </View>
+            <Text style={[styles.optionText, { color: colors.textPrimary }]}>
+              {option.label}
+            </Text>
+            <Ionicons name="chevron-forward" size={18} color={colors.secondary} />
+          </TouchableOpacity>
+        ))}
 
-        <TouchableOpacity
-          style={[styles.option, { borderBottomColor: colors.border }]}
-          onPress={toggleTheme}
-        >
-          <Ionicons
-            name={isDark ? "sunny" : "moon"}
-            size={20}
-            color={colors.primary}
-          />
-          <Text style={[styles.optionText, { color: colors.textPrimary }]}>
-            {isDark ? "Light Mode" : "Dark Mode"}
-          </Text>
-        </TouchableOpacity>
-
-        {user ? (
+        {user && (
           <TouchableOpacity
             style={[styles.option, { borderBottomColor: colors.border }]}
             onPress={handleSignOut}
           >
-            <Ionicons name="log-out" size={20} color={colors.accent} />
+            <View style={[styles.iconCircle, { backgroundColor: colors.surface }]}>
+              <Ionicons name="log-out-outline" size={20} color={colors.accent} />
+            </View>
             <Text style={[styles.optionText, { color: colors.accent }]}>
               Sign Out
             </Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity
-            style={[styles.option, { borderBottomColor: colors.border }]}
-            onPress={() => router.push("/auth/login")}
-          >
-            <Ionicons name="log-in" size={20} color={colors.primary} />
-            <Text style={[styles.optionText, { color: colors.primary }]}>
-              Sign In
-            </Text>
+            <Ionicons name="chevron-forward" size={18} color={colors.secondary} />
           </TouchableOpacity>
         )}
       </View>
@@ -116,28 +133,30 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  avatarContainer: {
+  headerCard: {
+    flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 40,
-    gap: 8,
+    gap: 16,
+    padding: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  avatarText: { color: "#fff", fontSize: 32, fontWeight: "700" },
-  email: { fontSize: 16, fontWeight: "500" },
-  username: { fontSize: 14 },
+  headerInfo: { flex: 1, gap: 2 },
+  name: { fontSize: 18, fontWeight: "700" },
+  email: { fontSize: 13 },
   options: { paddingHorizontal: 16 },
   option: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
+    paddingVertical: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  optionText: { fontSize: 16, fontWeight: "500" },
+  iconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  optionText: { flex: 1, fontSize: 15, fontWeight: "500" },
 });

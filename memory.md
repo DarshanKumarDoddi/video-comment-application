@@ -62,6 +62,16 @@
 | 2026-08-02 | Backend `.env` + `.env.example` added (gitignored); gitignore rules for venv/__pycache__ |
 | 2026-08-02 | Committed a49d7a1 (backend in-repo) |
 | 2026-08-02 | Phase 1 VERIFIED complete — tsc 0 errors, Metro android bundle OK, 5 tabs, grid/watch/auth/theme confirmed, types match backend, mock↔real switchable |
+| 2026-08-02 | Phase 2 backend verified end-to-end: local uvicorn + real Supabase (old project izustvmcqvvcpoexyotr). Fixed Supabase auth blockers: email-domain allowlist + captcha disabled by user; signup→login→post→reply→like→fetch all persist |
+| 2026-08-02 | Cloudflared quick tunnel exposes local backend (`*.trycloudflare.com`) since deployed vidtalk.6281401.xyz is a Next.js frontend, NOT the FastAPI API. `.env` switched to USE_MOCK_DATA=false + tunnel URL |
+| 2026-08-02 | lib/auth.ts `ensureUserRow` on signup/login so comment authors get real usernames (was falling back to "User") |
+| 2026-08-02 | Metro dev server running in tunnel mode — Expo Go URL: `exp://ibzkdps-darshankumar27-8081.exp.direct:80` |
+| 2026-08-02 | **Issue 1 RESOLVED (Google OAuth):** was using direct native Google flow (AuthSession.useAuthRequest + exchangeCodeForSession on a Google code) — wrong flow. Now uses `supabase.auth.signInWithOAuth()` + `WebBrowser.openAuthSessionAsync` + `exchangeCodeForSession(code)`; added `app/auth/callback.tsx` deep-link safety net. Dashboard still needs: Supabase Google provider Client ID/Secret, `https://izustvmcqvvcpoexyotr.supabase.co/auth/v1/callback` redirect URI in Google Cloud, and consent screen published/test-user |
+| 2026-08-02 | **Issue 2 RESOLVED (Profile "Not signed in"):** profile.tsx used local state + one-time getCurrentUser on mount. Now consumes `useAuth()`; AuthContext subscribes to `supabase.auth.onAuthStateChange` (SIGNED_IN/INITIAL_SESSION/TOKEN_REFRESHED/SIGNED_OUT) so any login path updates Profile instantly |
+| 2026-08-02 | **Issue 3 RESOLVED (RECORD_AUDIO):** expo-camera plugin in app.json missing `recordAudioAndroid:true` + `microphonePermission`; video-record screen only requested camera permission. Both fixed. **Requires native rebuild (eas build) to take effect** |
+| 2026-08-05 | **SUPABASE PROJECT MIGRATED** to fresh project `pmvmxxrtxnjkasyevpjs` (new email/account). Google provider ENABLED there (`google:true`), email autoconfirm on, schema created via `backend/supabase_schema.sql`. Old project `izustvmcqvvcpoexyotr` had google permanently `false` (never enabled) + the web-app project `bpicnshefhwnwqhoabhr` is paused. Confirmed `signInWithIdToken` is ALSO gated on provider-enabled (got `provider_disabled`), so dashboard enablement is mandatory |
+| 2026-08-05 | Both `.env` files updated to new project (mobile `EXPO_PUBLIC_SUPABASE_*` + backend `SUPABASE_URL/KEY`); backend restarted; full API flow verified against new project |
+| 2026-08-05 | Tunnel infra rebuilt: ngrok (`expo start --tunnel`) rate-limited + backend cloudflared died (origin DNS error 530). New backend tunnel `https://href-download-hereby-organizer.trycloudflare.com` (in `.env`), Metro at `exp://ngy3jca-darshankumar27-8081.exp.direct:80` |
 
 ## In Progress
 
@@ -76,9 +86,10 @@
 | Item | Details |
 |------|---------|
 | Cloudinary upload preset | `mobile_app_upload` — used by direct-upload path (lib/cloudinary.ts); verify it exists in Cloudinary dashboard |
-| Google OAuth | Needs EXPO_PUBLIC_GOOGLE_CLIENT_ID in .env; verify Android SHA-1 registered in Google Cloud Console |
+| Google OAuth (dashboard-side) | Code flow fixed. Confirm in Supabase dashboard: Google provider enabled with correct Client ID/Secret (no spaces/truncation). Confirm in Google Cloud Console: OAuth web client has `https://izustvmcqvvcpoexyotr.supabase.co/auth/v1/callback` in authorized redirect URIs; consent screen Published (or add test email). THEN re-test |
+| Camera fix needs native rebuild | Issue 3 fix is a permissions manifest change — requires `eas build`, not just `expo start` reload |
 | API secrets in .env | Should rotate if repo is public |
-| Backend deployment | Backend lives in-repo (backend/); deploy target + URL not yet decided for the copy |
+| Backend deployment | Backend lives in-repo (backend/); currently exposed via ephemeral cloudflared tunnel only |
 
 ## Notes
 

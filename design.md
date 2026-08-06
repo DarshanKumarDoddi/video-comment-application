@@ -2,9 +2,26 @@
 
 ## 1. Theme / Tone
 
-- **Style**: Minimal, clean, content-focused — inspired by YouTube but not a clone
+- **Style**: YouTube-inspired layout — content-focused feed, top app bar, category chips
 - **Modes**: Light + Dark (user-toggleable, system default respected)
 - **Tone**: Professional, modern, uncluttered — content is the focus
+
+## 2. Layout (YouTube-inspired)
+
+| Screen | Structure |
+|--------|-----------|
+| Home | App bar (logo + search/create/notifications/avatar icons) → category chips row → single-column video feed |
+| Search | App bar in search mode (back + input) → horizontal result cards |
+| Watch | Back header → full-width player → title → channel row (avatar, name, Subscribe) → action bar (like/dislike/share/save) → timestamps → comments header + composer + thread |
+| Upload | Title header → form card (URL + title + button) |
+| Notifications | Title header → permission banner → list items |
+| Profile ("You") | Title header → channel-style header card → options list with icon circles + chevrons |
+
+### Key Layout Rules
+- **Top app bar**: 52px row + safe-area inset; logo = accent rounded play box + bold "VidTalk"
+- **Category chips**: horizontal scroll, pill (8px radius); active = solid (chipActiveBg), inactive = chipBg
+- **Feed cards**: full-width 16:9 thumbnail (no card border), below = 40px avatar + title (2 lines) + "Channel · time ago" meta
+- **Tab bar**: 5 tabs, outline/filled icon variants, active = primary
 
 ## 2. Color Palette
 

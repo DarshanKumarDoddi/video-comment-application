@@ -14,6 +14,8 @@ import { useTheme } from "../../context/ThemeContext";
 import { fetchVideos } from "../../lib/api";
 import { Video } from "../../types";
 import VideoCard from "../../components/VideoCard";
+import AppHeader from "../../components/AppHeader";
+import CategoryChips, { DEFAULT_CATEGORIES } from "../../components/CategoryChips";
 
 const PAGE_SIZE = 10;
 
@@ -26,6 +28,7 @@ export default function HomeScreen() {
   const [error, setError] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [category, setCategory] = useState(DEFAULT_CATEGORIES[0]);
 
   const loadVideos = async () => {
     try {
@@ -50,20 +53,28 @@ export default function HomeScreen() {
     loadVideos();
   };
 
+  const filteredVideos =
+    category === "All"
+      ? videos
+      : videos.filter((v) =>
+          v.title.toLowerCase().includes(category.toLowerCase())
+        );
+
+  const visibleVideos = filteredVideos.slice(0, visibleCount);
+  const hasMoreVideos = visibleCount < filteredVideos.length;
+
   const handleEndReached = () => {
-    if (loadingMore || visibleCount >= videos.length) return;
+    if (loadingMore || visibleCount >= filteredVideos.length) return;
     setLoadingMore(true);
     setTimeout(() => {
-      setVisibleCount((c) => Math.min(c + PAGE_SIZE, videos.length));
+      setVisibleCount((c) => Math.min(c + PAGE_SIZE, filteredVideos.length));
       setLoadingMore(false);
     }, 400);
   };
 
   if (loading) {
     return (
-      <View
-        style={[styles.center, { backgroundColor: colors.background }]}
-      >
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
@@ -93,16 +104,26 @@ export default function HomeScreen() {
     );
   }
 
-  const visibleVideos = videos.slice(0, visibleCount);
-  const hasMoreVideos = visibleCount < videos.length;
-
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <AppHeader
+        showLogo
+        title="VidTalk"
+        showSearch
+        onSearch={() => router.push("/search")}
+        showCreate
+        onCreate={() => router.push("/upload")}
+        showNotifications
+        onNotifications={() => router.push("/notifications")}
+        showAvatar
+        onAvatar={() => router.push("/profile")}
+      />
+
+      <CategoryChips active={category} onSelect={setCategory} />
+
       <FlatList
         data={visibleVideos}
         keyExtractor={(item) => item.id}
-        numColumns={2}
-        columnWrapperStyle={styles.row}
         contentContainerStyle={styles.list}
         onEndReached={handleEndReached}
         onEndReachedThreshold={0.4}
@@ -131,7 +152,7 @@ export default function HomeScreen() {
         ListEmptyComponent={
           <View style={styles.center}>
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-              No videos yet. Check back soon!
+              No videos in this category yet.
             </Text>
           </View>
         }
@@ -143,8 +164,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  row: { paddingHorizontal: 12, gap: 12 },
-  list: { paddingVertical: 12, gap: 12 },
+  list: { paddingBottom: 16 },
   footer: { padding: 16, alignItems: "center" },
   footerText: { fontSize: 13, fontWeight: "500" },
   emptyText: { fontSize: 15, padding: 40, textAlign: "center" },

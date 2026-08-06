@@ -16,6 +16,7 @@ import {
   requestNotificationPermission,
   openNotificationSettings,
 } from "../../lib/notifications";
+import AppHeader from "../../components/AppHeader";
 
 interface Notification {
   id: string;
@@ -68,6 +69,7 @@ export default function NotificationsScreen() {
   if (!user) {
     return (
       <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <AppHeader title="Notifications" />
         <Ionicons name="notifications-outline" size={64} color={colors.secondary} />
         <Text style={[styles.title, { color: colors.textPrimary }]}>
           Notifications
@@ -90,6 +92,8 @@ export default function NotificationsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <AppHeader title="Notifications" />
+
       {showPermBanner && (
         <View style={[styles.permBanner, { borderBottomColor: colors.border }]}>
           <Ionicons
@@ -113,11 +117,11 @@ export default function NotificationsScreen() {
       )}
 
       {loading ? (
-        <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <View style={styles.center}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : notifications.length === 0 ? (
-        <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <View style={styles.center}>
           <Ionicons
             name="notifications-off-outline"
             size={64}
@@ -139,13 +143,13 @@ export default function NotificationsScreen() {
               style={[
                 styles.item,
                 { borderBottomColor: colors.border },
-                !item.read && { backgroundColor: colors.primary + "10" },
+                !item.read && { backgroundColor: colors.surface },
               ]}
               onPress={() => {
                 if (item.videoId) router.push(`/watch/${item.videoId}`);
               }}
             >
-              <View style={styles.iconContainer}>
+              <View style={[styles.iconContainer, { backgroundColor: colors.surface }]}>
                 <Ionicons name="chatbubble" size={20} color={colors.primary} />
               </View>
               <View style={styles.itemContent}>
@@ -201,7 +205,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "rgba(59,130,246,0.1)",
     justifyContent: "center",
     alignItems: "center",
   },

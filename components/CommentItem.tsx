@@ -158,7 +158,12 @@ export default function CommentItem({
       </View>
 
       {showReply && (
-        <View style={styles.replyComposer}>
+        <View
+        style={[
+          styles.replyComposer,
+          { borderColor: colors.border, backgroundColor: colors.surface },
+        ]}
+      >
           <TextInput
             style={[
               styles.replyInput,
@@ -231,7 +236,6 @@ const styles = StyleSheet.create({
   container: {
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#ccc",
   },
   header: {
     flexDirection: "row",
@@ -274,7 +278,6 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 6,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "#ccc",
   },
   replyInput: {
     paddingHorizontal: 10,

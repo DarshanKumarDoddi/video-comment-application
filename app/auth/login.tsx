@@ -23,6 +23,15 @@ import DisplayNamePrompt from "../../components/DisplayNamePrompt";
 WebBrowser.maybeCompleteAuthSession();
 
 const GOOGLE_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ?? "";
+const GOOGLE_CALLBACK_URL = AuthSession.makeRedirectUri({
+  scheme: "vidtalk",
+  path: "auth/callback",
+});
+
+function getQueryParam(url: string, key: string): string | null {
+  const match = url.match(new RegExp(`[?&]${key}=([^&]+)`));
+  return match ? decodeURIComponent(match[1].replace(/\+/g, " ")) : null;
+}
 
 export default function LoginScreen() {
   const { colors } = useTheme();
@@ -35,45 +44,50 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [showNamePrompt, setShowNamePrompt] = useState(false);
 
-  const [request, response, promptAsync] = AuthSession.useAuthRequest(
-    {
-      clientId: GOOGLE_CLIENT_ID,
-      redirectUri: AuthSession.makeRedirectUri({
-        scheme: "vidtalk",
-        path: "auth/callback",
-      }),
-      scopes: ["openid", "profile", "email"],
-      usePKCE: true,
-    },
-    {
-      authorizationEndpoint: "https://accounts.google.com/o/oauth2/v2/auth",
-      tokenEndpoint: "https://oauth2.googleapis.com/token",
-    }
-  );
-
   const handleGoogleSignIn = async () => {
     try {
-      const result = await promptAsync();
-      if (result.type === "success" && result.params.code) {
-        setLoading(true);
-        const { data, error } = await supabase.auth.exchangeCodeForSession(
-          result.params.code
-        );
-        if (error) throw error;
-        if (data.user) {
-          const user = {
-            id: data.user.id,
-            email: data.user.email ?? "",
-            username: data.user.user_metadata?.full_name,
-          };
-          setUser(user);
-          router.back();
-        }
+      setLoading(true);
+      await WebBrowser.warmUpAsync();
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: GOOGLE_CALLBACK_URL,
+          skipBrowserRedirect: true,
+        },
+      });
+      if (error) throw error;
+      if (!data?.url) throw new Error("Failed to start Google sign-in");
+
+      const result = await WebBrowser.openAuthSessionAsync(
+        data.url,
+        GOOGLE_CALLBACK_URL,
+        { preferEphemeralSession: false }
+      );
+
+      if (result.type !== "success" || !result.url) {
+        return;
+      }
+
+      const code = getQueryParam(result.url, "code");
+      if (!code) throw new Error("No authorization code returned");
+
+      const { data: sessionData, error: sessionError } =
+        await supabase.auth.exchangeCodeForSession(code);
+      if (sessionError) throw sessionError;
+      if (sessionData.user) {
+        const user = {
+          id: sessionData.user.id,
+          email: sessionData.user.email ?? "",
+          username: sessionData.user.user_metadata?.full_name,
+        };
+        setUser(user);
+        router.back();
       }
     } catch (err: any) {
       Alert.alert("Error", err.message || "Google sign-in failed");
     } finally {
       setLoading(false);
+      WebBrowser.coolDownAsync();
     }
   };
 
