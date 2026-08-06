@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import Constants from "expo-constants";
 import * as WebBrowser from "expo-web-browser";
 import * as AuthSession from "expo-auth-session";
 import { useTheme } from "../../context/ThemeContext";
@@ -23,10 +24,21 @@ import DisplayNamePrompt from "../../components/DisplayNamePrompt";
 WebBrowser.maybeCompleteAuthSession();
 
 const GOOGLE_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ?? "";
-const GOOGLE_CALLBACK_URL = AuthSession.makeRedirectUri({
-  scheme: "vidtalk",
-  path: "auth/callback",
-});
+
+function getCallbackUrl(): string {
+  // In Expo Go, makeRedirectUri resolves to exp://127.0.0.1:8081/--/auth/callback,
+  // but the app is actually served from the tunnel host — so the phone tries to
+  // connect to its own localhost and fails. Build the URL from the host that is
+  // actually serving the bundle so the deep link returns to the running session.
+  const hostUri =
+    Constants.expoConfig?.hostUri ?? (Constants.expoGoConfig as any)?.debuggerHost;
+  if (hostUri) {
+    return `exp://${hostUri}/--/auth/callback`;
+  }
+  return AuthSession.makeRedirectUri({ scheme: "vidtalk", path: "auth/callback" });
+}
+
+const GOOGLE_CALLBACK_URL = getCallbackUrl();
 
 function getQueryParam(url: string, key: string): string | null {
   const match = url.match(new RegExp(`[?&]${key}=([^&]+)`));
